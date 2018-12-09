@@ -28,6 +28,9 @@ extern "C" int main(int argc, char *argv[])
 		case 'i':
 			ccopts.bbid = atoi(optarg);
 			break;
+		case 'd':
+			ccopts.dbgsensors = true;
+			break;
 		}
 	}
 
