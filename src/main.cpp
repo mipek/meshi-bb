@@ -1,7 +1,13 @@
 #include <stdio.h>
-#include <unistd.h>
+#include "blackbox.h"
 #include "client_controller.h"
 #include "cprintf.h"
+
+#if PLAT == PLAT_WINDOWS
+#	include "wincompat/getopt.h"
+#else
+#	include <unistd.h>
+#endif
 
 #define DEBUG_MASTER "127.0.0.1"
 #define DEBUG_PORT 13337
@@ -20,11 +26,11 @@ extern "C" int main(int argc, char *argv[])
 			c_printf("-d create debug sensors\n-i <BlackBox-ID>\nDebug-Interface:\n\t-s <HOST_ADDRESS>\n\t-p <HOST_PORT>\n");
 			return 0;
 		case 's':
-		        ccopts.host = optarg;
-		        break;
+			ccopts.host = optarg;
+			break;
 		case 'p':
-		        ccopts.port = atoi(optarg);
-		        break;
+			ccopts.port = atoi(optarg);
+			break;
 		case 'i':
 			ccopts.bbid = atoi(optarg);
 			break;

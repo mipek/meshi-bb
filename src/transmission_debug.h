@@ -1,9 +1,5 @@
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include "public/transmission.h"
-#include "public/errors.h"
+#include "transmission.h"
+#include "errors.h"
 
 class transmission_debug: public transmission
 {

@@ -1,4 +1,4 @@
-#include "public/errors.h"
+#include "errors.h"
 
 const char *ErrorToString(Error error)
 {

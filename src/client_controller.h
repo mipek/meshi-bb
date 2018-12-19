@@ -1,4 +1,7 @@
-#include "public/controller.h"
+#ifndef _include_client_controller_
+#define _include_client_controller_
+
+#include <controller.h>
 #include <string>
 #include <vector>
 
@@ -25,6 +28,7 @@ public:
 	client_controller(transmission *trnsmsn): trnsmsn_(trnsmsn)
 	{
 	}
+	virtual ~client_controller();
 	void on_tick();
 
 	void register_sensor(sensor *s)
@@ -39,6 +43,12 @@ public:
 	{
 		return sensors_[idx];
 	}
+	void destroy_all_sensors();
 
 	static controller *make(ClientControllerOptions const& opts);
+
+private:
+	int find_and_add_sensors();
 };
+
+#endif //_include_client_controller_

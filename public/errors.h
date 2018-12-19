@@ -7,6 +7,7 @@ enum Error
 	kError_NoSuchHostname,
 	kError_SocketCreation,
 	kError_SocketConnect,
+	kError_Webcam
 };
 
 const char *ErrorToString(Error error);

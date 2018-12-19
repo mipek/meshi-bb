@@ -3,9 +3,17 @@
 
 #include <stddef.h>
 
-class sensor_value
+enum sensor_types
 {
-public:
+	kSensorTemperature = 1,
+	kSensorGas = 2,
+	kSensorThermal = 3,
+	kSensorColor = 4,
+	kSensorParticles = 5
+};
+
+struct sensor_value
+{
 	struct any {
 		union {
 			bool bValue;
@@ -29,9 +37,7 @@ public:
 	int get_sensor_id() const { return sensorid_; }
 	int get_value_count() const { return vcount_; }
 	const any& get_value(int idx) const { return values_[idx]; }
-	
-	
-//private:
+
 	int sensorid_;
 	int vcount_;
 	any *values_;
@@ -41,7 +47,7 @@ class sensor
 {
 public:
 	virtual int id() const =0; // id of this sensor
-	virtual const char *name() =0; // sensorname, eg. "temperature"
+	virtual sensor_types classify() const = 0;
 	virtual void get_value(sensor_value &value) =0;
 	virtual bool check_value(sensor_value const& value) =0;
 };
