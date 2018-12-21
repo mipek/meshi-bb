@@ -22,9 +22,13 @@ public:
 	{
 		return kSensorTemperature;
 	}
-	virtual void get_value(sensor_value &value)
+	virtual const char *name() const
 	{
-
+		return "FLIR Lepton 3";
+	}
+	virtual bool get_value(sensor_value &value)
+	{
+		return false;
 	}
 	virtual bool check_value(sensor_value const& value)
 	{

@@ -19,9 +19,12 @@ public:
 	{
 		return kSensorTemperature;
 	}
-	virtual void get_value(sensor_value &value);
+	virtual const char *name() const
+	{
+		return "DS";
+	}
+	virtual bool get_value(sensor_value &value);
 	virtual bool check_value(sensor_value const& value);
-
 	static Error create_sensor(sensor_temperature **sensor);
 };
 

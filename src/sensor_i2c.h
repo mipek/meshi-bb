@@ -18,9 +18,11 @@ public:
 	{
 		return "TODO";
 	}
-	virtual void get_value(sensor_value &value)
+	virtual sensor_types classify() const { return kSensorNone; }
+	virtual const char *name() const { return "debug"; }
+	virtual bool get_value(sensor_value &value)
 	{
-
+		return false;
 	}
 	virtual bool check_value(sensor_value const& value)
 	{

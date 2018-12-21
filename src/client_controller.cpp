@@ -5,6 +5,7 @@
 #include "cprintf.h"
 #include "sensor_temp.h"
 #include "sensor_thermal.h"
+#include "drivers/MAX30105.h"
 
 /**
  * Simple debug implementation for sensors (used for mocking)
@@ -20,16 +21,54 @@ public:
 public:
 	virtual int id() const { return id_; }
 	virtual sensor_types classify() const { return kSensorTemperature; }
-	virtual void get_value(sensor_value &value)
+	virtual const char *name() const { return "debug"; }
+	virtual bool get_value(sensor_value &value)
 	{
 		value.sensorid_ = id();
 		value.vcount_ = 1;
 		value.values_ = new sensor_value::any[value.vcount_];
 		value.values_[0].iValue = 36;
+		return true;
 	}
 	virtual bool check_value(sensor_value const& value)
 	{
 		return value.get_value_count() > 0;;
+	}
+};
+
+/**
+ * MAX30105 is a particle sensor with build-in temperature sensing capabilities.
+ */
+class sensor_max30105 : public sensor
+{
+	int id_;
+	MAX30105 ps_;
+public:
+	sensor_max30105(int bus, uint8_t address) : ps_(bus, address)
+	{
+		ps_.setup(); // TODO: make params configurable?
+	}
+	virtual int id() const { return id_; }
+	virtual sensor_types classify() const { return kSensorParticles; }
+	virtual const char *name() const { return "MAX30105"; }
+	virtual bool get_value(sensor_value &value)
+	{
+		MAX30105::measurement msrmnt;
+		if (ps_.read_sensor(msrmnt, 0))
+		{
+			value.sensorid_ = id();
+			value.vcount_ = 3;
+			value.values_ = new sensor_value::any[value.vcount_];
+			value.values_[0].iValue = msrmnt.red;
+			value.values_[1].iValue = msrmnt.ir;
+			value.values_[2].iValue = msrmnt.green;
+			return true;
+		}
+		return false;
+	}
+	virtual bool check_value(sensor_value const& value)
+	{
+		return value.get_value_count() >= 3;
 	}
 };
 
@@ -95,9 +134,16 @@ int client_controller::find_and_add_sensors()
 {
 	sensor *sensor;
 
+	int count = 0;
+
 	// try USB thermal camera first
 	if (sensor_thermal::create_sensor(&sensor) == kError_None)
 	{
 		register_sensor(sensor);
+		++count;
 	}
+
+	// MAX30105 particle sensor
+
+	return count;
 }

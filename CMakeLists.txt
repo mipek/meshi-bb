@@ -11,6 +11,8 @@ include_directories(public)
 file(GLOB blackbox_SRC
 	"src/*.h"
 	"src/*.cpp"
+	"src/drivers/*.h"
+	"src/drivers/*.cpp"
 	"public/*.h"
 )
 
