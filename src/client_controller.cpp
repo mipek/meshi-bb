@@ -27,7 +27,7 @@ public:
 		value.sensorid_ = id();
 		value.vcount_ = 1;
 		value.values_ = new sensor_value::any[value.vcount_];
-		value.values_[0].iValue = 36;
+		value.values_[0].iValue = rand();
 		return true;
 	}
 	virtual bool check_value(sensor_value const& value)
@@ -57,11 +57,13 @@ public:
 		if (ps_.read_sensor(msrmnt, 0))
 		{
 			value.sensorid_ = id();
-			value.vcount_ = 3;
+			value.vcount_ = 4;
 			value.values_ = new sensor_value::any[value.vcount_];
 			value.values_[0].iValue = msrmnt.red;
 			value.values_[1].iValue = msrmnt.ir;
 			value.values_[2].iValue = msrmnt.green;
+			value.values_[3].iValue = (int)ps_.read_temperature();
+			
 			return true;
 		}
 		return false;
@@ -69,6 +71,11 @@ public:
 	virtual bool check_value(sensor_value const& value)
 	{
 		return value.get_value_count() >= 3;
+	}
+public:
+	bool check_connection()
+	{
+		return ps_.check_connection();
 	}
 };
 
@@ -107,7 +114,7 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 		if (error != kError_None)
 		{
 			c_printf("{r}error: {d}%s\n", ErrorToString(error));
-			return nullptr;
+			//return nullptr;
 		}
 		c_printf("successfully connected!\n");
 
@@ -144,6 +151,14 @@ int client_controller::find_and_add_sensors()
 	}
 
 	// MAX30105 particle sensor
-
+	sensor_max30105 *max30105 = new sensor_max30105(1, 0x57);
+	if (max30105->check_connection())
+	{
+		register_sensor(max30105);
+		++count;
+	} else {
+		delete max30105;
+	}
+	
 	return count;
 }

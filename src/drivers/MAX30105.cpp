@@ -30,14 +30,36 @@ static void sleep_ms(int sleepMs)
 #endif
 }
 
-void MAX30105::setup(adc_range adc, bool fifo_rollover_enable, sample_averaging avg, sample_rate sps, led_mode mode, uint8_t led_amplitude, led_pulse_width pulse_width)
+static int interpret_as_int24(uint8_t *p)
+{
+	return (p[0] << 16) | (p[1] << 8) | p[2];
+}
+
+bool MAX30105::check_connection()
+{
+	uint8_t tmp;
+	return (bus_.read_bytes(&tmp, sizeof(uint8_t)) >= 1);
+}
+
+void MAX30105::setup(
+	adc_range adc, bool fifo_rollover_enable,
+	sample_averaging avg, sample_rate sps,
+	led_mode mode, uint8_t led_amplitude, led_pulse_width pulse_width)
 {
 	reset();
+
+	set_led_pulse_width(pulse_width);
+	set_led_mode(mode, led_amplitude);
+	
+	set_sample_rate(sps);
+
+	set_adc_range(adc);
+	
 	set_fifo_averaging(avg);
 	set_fifo_rollover(fifo_rollover_enable);
-	set_led_mode(mode, led_amplitude);
-	set_adc_range(adc);
-	set_sample_rate(sps);
+
+	// fifo clear
+	clear_fifo();
 }
 
 void MAX30105::reset()
@@ -69,11 +91,13 @@ bool MAX30105::wait_for_clear(uint8_t reg, uint8_t check)
 void MAX30105::set_led_mode(led_mode mode, uint8_t amplitude)
 {
 	bit_mask(0x09, 0b11111000, (uint8_t)mode);
-
+	
 	mode_ = mode;
 	switch (mode) {
 	case led_mode::red_green_ir:
 		bus_.write_register(0x0E, amplitude);
+		bus_.write_register(0x11, 0b00100001);
+		bus_.write_register(0x12, 0b00000011);
 	case led_mode::red_ir:
 		bus_.write_register(0x0D, amplitude);
 	case led_mode::red:
@@ -110,37 +134,75 @@ void MAX30105::set_adc_range(adc_range range)
 	bit_mask(0x0A, 0b10011111, (uint8_t)range);
 }
 
+uint8_t MAX30105::get_read_pointer()
+{
+	return bus_.read_register<uint8_t>(0x06);
+}
+
+uint8_t MAX30105::get_write_pointer()
+{
+	return bus_.read_register<uint8_t>(0x04);
+}
+
+void MAX30105::clear_fifo()
+{
+	bus_.write_register(0x04, 0);
+	bus_.write_register(0x05, 0);
+	bus_.write_register(0x06, 0);
+}
+
+// TODO: we should put the data into a buffer and only provide access to measurements via the buffer
+// TODO: interrupts instead of polling?
+void MAX30105::update()
+{
+	uint8_t read = get_read_pointer();
+	uint8_t write = get_write_pointer();
+
+	int delta = write - read;
+	if (delta != 0)
+	{
+		if (delta < 0) {
+			delta += 32;
+		}
+		
+		uint8_t single_read_size = get_count_active_leds() * 3;
+
+		// if we are lagging behind we'll try to catch up
+		while (delta > 0)
+		{
+			uint8_t reg = 0x07;
+			bus_.write_bytes(&reg, 1);
+			
+			uint8_t bytes[3 * 3] = {0};
+			bus_.read_bytes(bytes, single_read_size);
+		
+			int val = interpret_as_int24(bytes);
+			
+			measurement values;
+			values.red = interpret_as_int24(bytes);
+			values.ir = interpret_as_int24(bytes + 3);
+			values.green = interpret_as_int24(bytes + 6);
+			
+			delta -= single_read_size;
+		}
+	}
+}
+
 bool MAX30105::read_sensor(measurement &values, uint8_t position)
 {
 	// TODO: refine this
 	bus_.write_register(0x06, position);
-	int count_active_leds = 0;
-	switch (mode_) {
-	case led_mode::red_green_ir:
-		count_active_leds = 3;
-		break;
-	case led_mode::red_ir:
-		count_active_leds = 2;
-		break;
-	case led_mode::red:
-		count_active_leds = 1;
-		break;
-	}
+	
+	uint8_t reg = 0x07;
+	bus_.write_bytes(&reg, 1);
 
-	if (count_active_leds > 0) {
-		uint8_t buffer[2] = { 0x07, count_active_leds };
-		bus_.write_bytes(buffer, 2);
-		
-		uint8_t bytes[3 * 3] = { 0 };
-		bus_.read_bytes(&bytes, count_active_leds);
-		
-		// one measurement is 3-byte, we put it into a uint32_t for simplicity.
-		values.red = *reinterpret_cast<uint32_t*>(bytes) & 0xFFFFFF;
-		values.ir = *reinterpret_cast<uint32_t*>(bytes + 3) & 0xFFFFFF;
-		values.green = *reinterpret_cast<uint32_t*>(bytes + 6) & 0xFFFFFF;
-	}
-	return false;
-	//uint8_t bytes = bus_.read_register<uint8_t>(0x07, )
+	uint8_t bytes[3 * 3] = {0};
+	bus_.read_bytes(&bytes, get_count_active_leds() * 3);
+
+	// one measurement is 3-byte, we put it into a uint32_t for simplicity.
+	values.red = interpret_as_int24(bytes);
+	values.ir = interpret_as_int24(bytes + 3);
+	values.green = interpret_as_int24(bytes + 6);
 }
 
 float MAX30105::read_temperature()
@@ -154,22 +216,50 @@ float MAX30105::read_temperature()
 	return -999.0f;
 }
 
+uint8_t MAX30105::get_count_active_leds()
+{
+	uint8_t count_active_leds = 0;
+	switch (mode_) {
+	case led_mode::red_green_ir:
+		count_active_leds = 3;
+		break;
+	case led_mode::red_ir:
+		count_active_leds = 2;
+		break;
+	case led_mode::red:
+		count_active_leds = 1;
+		break;
+	}
+	return count_active_leds;
+}
+
 #if defined(STANDALONE_TEST)
 #include <cstdio>
 int main(int argc, char *argv[])
 {
 	MAX30105 sensor(1, 0x57);
+	if (!sensor.check_connection()) {
+		printf("MAX30105 is not properly connected\n");
+		return 1;
+	}
+	
+	sensor.setup();
+	
 	for (;;) {
-		MAX30105::measurement msrmnt;
+		//sensor.update();
+		
+		MAX30105::measurement msrmnt = {0};
 		float temp = sensor.read_temperature();
 
 		sensor.read_sensor(msrmnt, 0);
 		temp = sensor.read_temperature();
+		
 
 		printf("R: %d, IR: %d, G: %d, Temp: %f\n",
 			msrmnt.red, msrmnt.ir, msrmnt.green, temp);
 
 		sleep_ms(500);
 	}
+	return 0;
 }
 #endif //STANDALONE_TEST

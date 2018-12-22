@@ -8,14 +8,18 @@
 // TODO: add support
 #else
 #	include <unistd.h>
+#	include <sys/ioctl.h>
+#	include <fcntl.h>
+#	include <linux/i2c.h>
+#	include <linux/i2c-dev.h>
 #endif
 
-i2c_master::i2c_master(int bus)
+i2c_master::i2c_master(int busnum)
 {
 #if PLAT == PLAT_WINDOWS
 #else
 	char buffer[32];
-	snprintf(buffer, sizeof(buffer), "/dev/i2c-%d", id);
+	snprintf(buffer, sizeof(buffer), "/dev/i2c-%d", busnum);
 	fd_ = open(buffer, O_RDWR);
 #endif
 }
@@ -26,7 +30,6 @@ void i2c_master::set_slave_address(uint8_t address)
 #else
 	ioctl(fd_, I2C_SLAVE, address);
 #endif
-
 }
 
 void i2c_master::write_bytes(void *data, uint8_t length)
@@ -37,7 +40,7 @@ void i2c_master::write_bytes(void *data, uint8_t length)
 #endif
 }
 
-size_t i2c_master::read_bytes(void *data, uint8_t length)
+uint8_t i2c_master::read_bytes(void *data, uint8_t length)
 {
 #if PLAT == PLAT_WINDOWS
 	return 0;

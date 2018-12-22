@@ -12,9 +12,9 @@ enum class led_mode
 	red_green_ir = 0x07
 };
 
-enum class led_pulse_width
+enum class led_pulse_width // µs
 {
-	pw69 = 0x00, // µs
+	pw69 = 0x00,
 	pw118 = 0x01,
 	pw215 = 0x02,
 	pw411 = 0x03
@@ -68,9 +68,11 @@ public:
 	{
 		bus_.set_slave_address(address);
 	}
-	void setup(adc_range adc = adc_range::adc2048, bool fifo_rollover_enable = true,
+
+	bool check_connection();
+	void setup(adc_range adc = adc_range::adc4096, bool fifo_rollover_enable = true,
 		sample_averaging avg = sample_averaging::avg1, sample_rate sps = sample_rate::sps50,
-		led_mode mode = led_mode::red, uint8_t led_amplitude = 0x1F, led_pulse_width pulse_width = led_pulse_width::pw69);
+		led_mode mode = led_mode::red_green_ir, uint8_t led_amplitude = 0x1F, led_pulse_width pulse_width = led_pulse_width::pw69);
 	void reset();
 
 public:
@@ -82,12 +84,18 @@ public:
 	void set_led_pulse_width(led_pulse_width width);
 	void set_sample_rate(sample_rate sps);
 	void set_adc_range(adc_range range);
+	
+	uint8_t get_read_pointer();
+	uint8_t get_write_pointer();
+	void clear_fifo();
 
 public:
-	bool read_sensor(measurement &values, uint8_t position);
+	void update();
+	bool read_sensor(measurement &values, uint8_t position); // subject to change
 	float read_temperature();
 	
 private:
+	uint8_t get_count_active_leds();
 	bool wait_for_clear(uint8_t reg, uint8_t check);
 	void bit_mask(uint8_t reg, uint8_t mask, uint8_t val);
 };

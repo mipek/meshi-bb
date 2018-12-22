@@ -1,9 +1,9 @@
 #include "blackbox.h"
-#include "transmission_debug.h"	
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <ctype.h>
+#include "transmission_debug.h"	
 
 #if PLAT == PLAT_WINDOWS
 #	pragma comment(lib, "Ws2_32.lib")
@@ -36,11 +36,11 @@ static Error perform_dns_lookup(sockaddr_in *server_addr, const char *host)
 	server_addr->sin_addr.S_un = ((struct sockaddr_in *)(res->ai_addr))->sin_addr.S_un;
 	freeaddrinfo(res);
 #else
-	hostent hostEntry = gethostbyname(host);
+	hostent *hostEntry = gethostbyname(host);
 	if (!hostEntry) {
 		return kError_NoSuchHostname;
 	}
-	memcpy(server_addr.sin_addr, hostEntry->h_addr_list[0], hostEntry->h_length);
+	memcpy(&server_addr->sin_addr, hostEntry->h_addr_list[0], hostEntry->h_length);	
 #endif
 	return kError_None;
 }
