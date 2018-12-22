@@ -1,1 +1,0 @@
-avrdude -c usbasp -p t2313 -U lfuse:w:0xe4:m -U hfuse:w:0xdb:m -U efuse:w:0xff:m
