@@ -46,6 +46,6 @@ def server():
 		print 'lat: ' + str(lat)
 		print 'lng: ' + str(lng)
 		print '------------------'
-		s.sendto(data, addr)
+		#s.sendto(data, addr)
 
 main()

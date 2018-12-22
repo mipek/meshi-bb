@@ -108,7 +108,7 @@ void client_controller::on_start()
 void client_controller::on_tick()
 {
 	uint64_t now = millis();
-	if (now - last_tick_ < 100)
+	if (now - last_tick_ > 100)
 	{
 		// check if any data is available to be received
 		trnsmsn_->update(this);
