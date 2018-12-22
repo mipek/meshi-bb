@@ -5,7 +5,9 @@ class controller
 {
 public:
 	virtual ~controller() {};
+	virtual void on_start() = 0;
 	virtual void on_tick() =0;
+	virtual bool is_running() const =0;
 };
 
 #endif //_include_controller_h_

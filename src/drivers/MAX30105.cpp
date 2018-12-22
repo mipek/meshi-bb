@@ -1,34 +1,7 @@
 #include "MAX30105.h"
-
-#if PLAT == PLAT_WINDOWS
-#	include <Windows.h>
-#else
-#	include <unistd.h>
-#	include <sys/time.h>
-#endif
+#include "../plat_compat.h"
 
 static const uint8_t WAIT_FOR_CLEAR_TIMEOUT = 100;
-
-// Returns current milliseconds. Start of the counter is not specified.
-static uint64_t millis()
-{
-#if PLAT == PLAT_WINDOWS
-	return GetTickCount64();
-#else
-	struct timeval tp;
-	gettimeofday(&tp, NULL);
-	return tp.tv_sec * 1000 + tp.tv_usec / 1000;
-#endif
-}
-
-static void sleep_ms(int sleepMs)
-{
-#if PLAT == PLAT_WINDOWS
-	Sleep(sleepMs);
-#else
-	usleep(sleepMs * 1000);
-#endif
-}
 
 static int interpret_as_int24(uint8_t *p)
 {
@@ -203,6 +176,7 @@ bool MAX30105::read_sensor(measurement &values, uint8_t position)
 	values.red = interpret_as_int24(bytes);
 	values.ir = interpret_as_int24(bytes + 3);
 	values.green = interpret_as_int24(bytes + 6);
+	return true;
 }
 
 float MAX30105::read_temperature()

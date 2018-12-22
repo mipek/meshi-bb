@@ -59,7 +59,7 @@ void output_color_string(const char *format, va_list &args)
 #if PLAT == PLAT_WINDOWS
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	char s[1024];
-	inlen = _vsnprintf(s, sizeof(s), format, args);
+	inlen = _vsnprintf_s(s, sizeof(s), format, args);
 #else
 	std::string s = format;
 	inlen = s.length();

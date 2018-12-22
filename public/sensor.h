@@ -3,14 +3,14 @@
 
 #include <stddef.h>
 
-enum sensor_types
+enum class sensor_types
 {
-	kSensorNone = 0,
-	kSensorTemperature = 1,
-	kSensorGas = 2,
-	kSensorThermal = 3,
-	kSensorColor = 4,
-	kSensorParticles = 5
+	none = 0,
+	temperature = 1,
+	gas = 2,
+	thermal = 3,
+	color = 4,
+	particles = 5
 };
 
 struct sensor_value

@@ -1,7 +1,11 @@
+#include "blackbox.h"
+#if PLAT == PLAT_WINDOWS
 #include "webcam.h"
 #include "cprintf.h"
 #include <string>
-#include "../libs/escapi.h"
+
+// HACK
+#include "../libs/escapi.cpp"
 
 /**
  * Webcam implementation for windows
@@ -66,8 +70,11 @@ Error create_webcam(webcam **cam, int id, int width, int height)
 	if (!escapiInitialized) {
 		escapiInitialized = true;
 		int devices = setupESCAPI();
-		if (devices == 0) {
-			c_printf("{r}error: {d}ESCAPI initialization failure or no devices found.\n");
+		if (devices < 0) {
+			c_printf("{r}error: {d}ESCAPI initialization failure.\n");
+			return kError_Webcam;
+		} else if (devices == 0) {
+			c_printf("{y}warn: {d}no UVC devices found.\n");
 			return kError_Webcam;
 		}
 	}
@@ -89,3 +96,4 @@ Error create_webcam(webcam **cam, int id, int width, int height)
 	*cam = webcam;
 	return kError_None;
 }
+#endif

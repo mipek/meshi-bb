@@ -17,7 +17,7 @@ public:
 	}
 	virtual sensor_types classify() const
 	{
-		return kSensorTemperature;
+		return sensor_types::temperature;
 	}
 	virtual const char *name() const
 	{

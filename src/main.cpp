@@ -32,7 +32,7 @@ extern "C" int main(int argc, char *argv[])
 			ccopts.port = atoi(optarg);
 			break;
 		case 'i':
-			ccopts.bbid = atoi(optarg);
+			ccopts.bbid = (uint16_t)atoi(optarg);
 			break;
 		case 'd':
 			ccopts.dbgsensors = true;
@@ -50,8 +50,11 @@ extern "C" int main(int argc, char *argv[])
 		return 2;
 	}
 
-	// simulate
-	controller->on_tick();
+	// start and begin simulating
+	controller->on_start();
+	while (controller->is_running()) {
+		controller->on_tick();
+	}
 
 	delete controller;
 	return 0;
