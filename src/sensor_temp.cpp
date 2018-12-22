@@ -1,4 +1,3 @@
-#include "i2cmeshi.h"
 #include "sensor_temp.h"
 
 bool sensor_temperature::get_value(sensor_value &value)

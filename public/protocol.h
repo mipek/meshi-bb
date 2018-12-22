@@ -30,9 +30,9 @@ enum class packet_flags
 	reserved = 8
 };
 
-struct Position
+struct position
 {
-	Position(float lat, float lng): lat_(lat), lng_(lng)
+	position(float lat, float lng): lat_(lat), lng_(lng)
 	{
 	}
 	float lat_;
@@ -50,7 +50,7 @@ struct packet
 	uint32_t checksum;
 	uint16_t bbid;
 	uint32_t time;
-	Position pos;
+	position pos;
 };
 
 #endif _include_public_protocol_h_

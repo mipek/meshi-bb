@@ -92,7 +92,7 @@ void client_controller::on_start()
 	// announce what kind of sensors we've got
 	message_builder builder;
 	builder.begin_message(packet_id::c2s_sensors, packet_flags::reliable,
-		bbid_, (uint32_t)time(NULL), Position(52.31f, 13.63f));
+		bbid_, (uint32_t)time(NULL), position(52.31f, 13.63f));
 
 	builder.write_byte((uint8_t)get_sensor_count());
 	for (size_t i = 0; i < get_sensor_count(); ++i) {
@@ -116,7 +116,7 @@ void client_controller::on_tick()
 		// prepare measurement packet
 		message_builder builder;
 		builder.begin_message(packet_id::c2s_measurement, packet_flags::none,
-			bbid_, (uint32_t)time(NULL), Position(52.31f, 13.63f));
+			bbid_, (uint32_t)time(NULL), position(52.31f, 13.63f));
 
 		builder.write_byte(0); // EventID
 		builder.write_byte((uint8_t)get_sensor_count());

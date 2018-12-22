@@ -7,7 +7,7 @@ message_builder::message_builder(): payload_offset_(0)
 }
 
 void message_builder::begin_message(packet_id id, packet_flags flags,
-	uint16_t bbid, uint32_t time, Position const& pos)
+	uint16_t bbid, uint32_t time, position const& pos)
 {
 	static uint8_t packet_number_seed = 0;
 

@@ -1,4 +1,3 @@
-#include "i2cmeshi.h"
 #include "sensor_thermal.h"
 #include "webcam.h"
 
