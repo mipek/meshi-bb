@@ -214,6 +214,12 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 	}
 }
 
+static bool check_i2c_availability(int bus)
+{
+	i2c_master i2c(bus);
+	return i2c.is_valid();
+}
+
 int client_controller::find_and_add_sensors()
 {
 	sensor *sensor;
@@ -227,14 +233,20 @@ int client_controller::find_and_add_sensors()
 		++count;
 	}
 
-	// MAX30105 particle sensor
-	sensor_max30105 *max30105 = new sensor_max30105(1, 0x57);
-	if (max30105->check_connection())
+	const int i2c_bus = 1;
+	if (check_i2c_availability(i2c_bus))
 	{
-		register_sensor(max30105);
-		++count;
+		// MAX30105 particle sensor
+		sensor_max30105 *max30105 = new sensor_max30105(i2c_bus, 0x57);
+		if (max30105->check_connection())
+		{
+			register_sensor(max30105);
+			++count;
+		} else {
+			delete max30105;
+		}
 	} else {
-		delete max30105;
+		c_printf("{y}warn: {d}could not open i2c bus #%d for reading, skipping i2c sensors\n", i2c_bus);
 	}
 	
 	return count;

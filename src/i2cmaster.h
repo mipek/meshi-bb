@@ -9,6 +9,8 @@ class i2c_master
 	int fd_;
 public:
 	i2c_master(int bus);
+	~i2c_master();
+	bool is_valid() const;
 	void set_slave_address(uint8_t id);
 	void write_bytes(void *data, uint8_t length);
 	uint8_t read_bytes(void *data, uint8_t length);

@@ -24,6 +24,26 @@ i2c_master::i2c_master(int busnum)
 #endif
 }
 
+i2c_master::~i2c_master()
+{
+#if PLAT == PLAT_WINDOWS
+#else
+	if (is_valid()) {
+		close(fd_);
+		fd_ = -1;
+	}
+#endif
+}
+
+bool i2c_master::is_valid() const
+{
+#if PLAT == PLAT_WINDOWS
+	return false;
+#else
+	return fd_ != 0;
+#endif
+}
+
 void i2c_master::set_slave_address(uint8_t address)
 {
 #if PLAT == PLAT_WINDOWS

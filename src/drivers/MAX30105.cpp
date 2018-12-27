@@ -11,7 +11,7 @@ static int interpret_as_int24(uint8_t *p)
 bool MAX30105::check_connection()
 {
 	uint8_t tmp;
-	return (bus_.read_bytes(&tmp, sizeof(uint8_t)) >= 1);
+	return bus_.is_valid() && (bus_.read_bytes(&tmp, sizeof(uint8_t)) >= 1);
 }
 
 void MAX30105::setup(
