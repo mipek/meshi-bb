@@ -1,3 +1,4 @@
+#include "blackbox.h"
 #include "plat_compat.h"
 #if PLAT == PLAT_WINDOWS
 #	include <Windows.h>

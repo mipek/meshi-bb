@@ -2,6 +2,7 @@
 #define _inclde_public_transmission
  
 #include <cstdint>
+#include <cstring>
 #include "protocol.h"
 
 struct message

@@ -21,6 +21,7 @@
 #	include <unistd.h>
 #	include <netdb.h>
 #	include <arpa/inet.h>
+#	include <errno.h>
 #endif
 
 static int get_error_code()

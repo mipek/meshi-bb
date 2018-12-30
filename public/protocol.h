@@ -53,4 +53,4 @@ struct packet
 	position pos;
 };
 
-#endif _include_public_protocol_h_
+#endif //_include_public_protocol_h_

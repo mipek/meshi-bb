@@ -17,3 +17,8 @@ file(GLOB blackbox_SRC
 )
 
 add_executable(blackbox ${blackbox_SRC})
+
+if (UNIX)
+	find_package(OpenCV REQUIRED)
+	target_link_libraries(blackbox opencv_core opencv_video opencv_videoio)
+endif (UNIX)
