@@ -1,13 +1,13 @@
-#include <string>
 #include "blackbox.h"
 #if PLAT != PLAT_WINDOWS
+#include <string>
 #include "webcam.h"
 #include "cprintf.h"
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
 /**
- * Webcam implementation for windows
+ * Webcam implementation using OpenCV
  */
 class webcam_opencv: public webcam
 {
