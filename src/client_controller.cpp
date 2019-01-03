@@ -3,12 +3,18 @@
 #include "sensor.h"
 #include "message_builder.h"
 #include "transmission_debug.h"
+#include "transport_debug.h"
 #include "cprintf.h"
 #include "sensor_temp.h"
 #include "sensor_thermal.h"
 #include "drivers/MAX30105.h"
 #include "plat_compat.h"
 #include <ctime>
+
+Error create_webcam(webcam **, int id, int width, int height)
+{
+	return (Error)1;
+}
 
 /**
  * Simple debug implementation for sensors (used for mocking)
@@ -103,6 +109,15 @@ void client_controller::on_start()
 	message msg;
 	builder.finalize_message(msg);
 	trnsmsn_->send_message(msg);
+
+	// debug routes
+	float p1[2] = {52.460707f, 13.503987f};
+	float p2[2] = {52.458865f, 13.506573f}; //270m
+	float p3[2] = {52.452931f, 13.515043f}; //350m
+	transport_->add_destination(p1[0], p1[1]);
+	transport_->add_destination(p2[0], p2[1]);
+	transport_->add_destination(p3[0], p3[1]);
+	transport_->on_start(latlng(p1[0], p1[1]));
 }
 
 void client_controller::on_tick()
@@ -112,6 +127,8 @@ void client_controller::on_tick()
 	{
 		// check if any data is available to be received
 		trnsmsn_->update(this);
+
+		transport_->on_update(latlng(13.45, 13.51));
 
 		// prepare measurement packet
 		message_builder builder;
@@ -202,6 +219,9 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 			sensor_debug *sensor = new sensor_debug(1);
 			controller->register_sensor(sensor);
 		}
+
+		transport *trans = new transport_debug();
+		controller->set_transport(trans);
 
 		int foundSenorCount = controller->find_and_add_sensors();
 		c_printf("{g}info: {d}found {y}%d {d}sensors\n", foundSenorCount);

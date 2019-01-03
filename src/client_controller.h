@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <transmission.h>
+#include <transport.h>
 
 /* forward declaration */
 class sensor;
@@ -24,6 +25,7 @@ struct ClientControllerOptions
 class client_controller: public controller, public message_listener
 {
 	transmission *trnsmsn_;
+	transport *transport_;
 	std::vector<sensor*> sensors_;
 	uint64_t last_tick_;
 	uint16_t bbid_;
@@ -52,6 +54,9 @@ public:
 		return sensors_[idx];
 	}
 	void destroy_all_sensors();
+
+	void set_transport(transport *t) { transport_ = t; }
+	transport *get_transport() { return transport_; }
 
 	static controller *make(ClientControllerOptions const& opts);
 

@@ -1,11 +1,41 @@
 #ifndef _include_public_transport_h_
 #define _include_public_transport_h_
 
+#include <deque>
+
 struct latlng
 {
+	latlng() {}
+	latlng(float lat, float lng): latitude(lat), longitude(lng) {}
 	float latitude;
 	float longitude;
-}
+};
+
+class route
+{
+	unsigned int start_time_;
+	std::deque<latlng> pos_;
+	std::deque<latlng>::iterator current_;
+public:
+	unsigned int get_start_time() const {
+		return start_time_;
+	}
+	latlng get_destination() const {
+		return *current_;
+	}
+	bool has_next() {
+		return current_ != pos_.end();
+	}
+	void advance() {
+		current_++;
+	}
+	void reset() {
+		current_ = pos_.begin();
+	}
+	void add_checkpoint(float lat, float lng) {
+		pos_.emplace_back(lat, lng);
+	}
+};
 
 // this class specifies all possible notifications from our transport system
 class transport_listener
@@ -17,10 +47,15 @@ public:
 class transport
 {
 public:
+	virtual void on_start(latlng const& startpos) =0;
+	virtual void on_update(latlng const& curpos) =0;
 	virtual void set_listener(transport_listener *callback) =0;
 	virtual transport_listener *get_listener() =0;
-	virtual void add_destination(latlng const& dest) =0;
-	virtual unsigned int get_time_to_next() =0;
-}
+	virtual route *get_route() =0;
+
+	void add_destination(float lat, float lng) {
+		get_route()->add_checkpoint(latlng(lat, lng));
+	}
+};
 
 #endif //_include_public_transport_h_
