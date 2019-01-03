@@ -168,7 +168,36 @@ void client_controller::on_tick()
 
 void client_controller::on_message(message const& msg)
 {
-	// TODO: handle incoming messages
+	const uint8_t *payload = msg.get_payload();
+	switch (msg.get_packet_id()) {
+	case packet_id::s2c_routes:
+		on_message_routes(payload);
+		break;
+	}
+}
+
+void client_controller::on_message_events(const uint8_t *payload)
+{
+	uint8_t ecount = *payload++;
+	for (uint8_t i = 0; i < ecount; ++i) {
+		uint8_t eventid = *(uint8_t*)(payload++);
+	}
+}
+
+void client_controller::on_message_routes(const uint8_t *payload)
+{
+	uint8_t rcount = *payload++;
+	uint32_t stime = *(uint32_t*)(payload);
+	payload += sizeof(uint32_t);
+
+	routes_.reserve(rcount);
+	for (uint8_t i = 0; i < rcount; ++i) {
+		float lat = *(float*)payload;
+		payload += sizeof(float);
+		float lng = *(float*)payload;
+		payload += sizeof(float);
+		routes_.push_back({ lat, lng });
+	}
 }
 
 void client_controller::destroy_all_sensors()

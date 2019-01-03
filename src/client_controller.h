@@ -25,6 +25,7 @@ class client_controller: public controller, public message_listener
 {
 	transmission *trnsmsn_;
 	std::vector<sensor*> sensors_;
+	std::vector<position> routes_;
 	uint64_t last_tick_;
 	uint16_t bbid_;
 	bool running_;
@@ -57,6 +58,10 @@ public:
 
 public:
 	void on_message(message const& msg);
+
+private:
+	void on_message_events(const uint8_t *payload);
+	void on_message_routes(const uint8_t *payload);
 
 private:
 	int find_and_add_sensors();
