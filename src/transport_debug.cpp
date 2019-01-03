@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include "transport_debug.h"
 #include "cprintf.h"
 #include "plat_compat.h"
@@ -38,7 +39,7 @@ void transport_debug::on_update(latlng const& curpos) {
 	}
 
 	//c_printf("{g}info: {d}time left {m}%d\n", (dest_time_-(unsigned int)millis()));
-	if ((unsigned int)millis() >= dest_time_) {
+	if (millis() >= dest_time_) {
 		startpos_ = destpos_;
 		on_reach_destination();
 	}
@@ -55,7 +56,7 @@ bool transport_debug::get_next_destination(latlng &pos) {
 void transport_debug::on_reach_destination() {
 	if (get_next_destination(destpos_)) {
 		float distance = get_distance(startpos_, destpos_);
-		unsigned int travel_duration_secs = (unsigned int)(distance / speed_meters);
+		uint64_t travel_duration_secs = (uint64_t)(distance / speed_meters);
 		dest_time_ = millis() + travel_duration_secs*1000;
 		route_.advance();
 		c_printf("{g}info: {d}reached destination, next dest reached in {m}%d {d}seconds (%.2f meters)\n", travel_duration_secs, distance);

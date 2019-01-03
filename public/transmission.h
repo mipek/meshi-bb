@@ -48,7 +48,7 @@ struct message
 		return *(data + 7);
 	}
 
-	uint8_t *get_payload()
+	uint8_t *get_payload() const
 	{
 		return (data + packet_c2s_header_size);
 	}

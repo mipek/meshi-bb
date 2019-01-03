@@ -115,7 +115,7 @@ void client_controller::on_tick()
 		// check if any data is available to be received
 		trnsmsn_->update(this);
 
-		transport_->on_update(latlng(13.45, 13.51));
+		transport_->on_update(latlng(13.45f, 13.51f));
 
 		// prepare measurement packet
 		message_builder builder;

@@ -1,5 +1,6 @@
 #include <transport.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <deque>
 
 class transport_debug: public transport
@@ -7,7 +8,7 @@ class transport_debug: public transport
 	transport_listener *callback_;
 	route route_;
 	latlng startpos_, destpos_;
-	unsigned int dest_time_;
+	uint64_t dest_time_;
 public:
 	transport_debug(): callback_(NULL), dest_time_(0)
 	{
