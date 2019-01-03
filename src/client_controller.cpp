@@ -3,6 +3,7 @@
 #include "sensor.h"
 #include "message_builder.h"
 #include "transmission_debug.h"
+#include "transport_debug.h"
 #include "cprintf.h"
 #include "sensor_temp.h"
 #include "sensor_thermal.h"
@@ -96,8 +97,9 @@ void client_controller::on_start()
 
 	builder.write_byte((uint8_t)get_sensor_count());
 	for (size_t i = 0; i < get_sensor_count(); ++i) {
-		sensor_types stype = get_sensor(i)->classify();
-		builder.write_byte((uint8_t)stype);
+		sensor *sensor = get_sensor(i);
+		builder.write_byte((uint8_t)sensor->id());
+		builder.write_byte((uint8_t)sensor->classify());
 	}
 
 	message msg;
@@ -113,6 +115,8 @@ void client_controller::on_tick()
 		// check if any data is available to be received
 		trnsmsn_->update(this);
 
+		transport_->on_update(latlng(13.45, 13.51));
+
 		// prepare measurement packet
 		message_builder builder;
 		builder.begin_message(packet_id::c2s_measurement, packet_flags::none,
@@ -127,6 +131,7 @@ void client_controller::on_tick()
 			sensor_value value;
 			sensor->get_value(value);
 
+			builder.write_byte((uint8_t)sensor->id());
 			switch (sensor->classify())
 			{
 			case sensor_types::temperature:
@@ -230,6 +235,26 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 
 			sensor_debug *sensor = new sensor_debug(1);
 			controller->register_sensor(sensor);
+		}
+
+		transport *trans = new transport_debug();
+		controller->set_transport(trans);
+		float p1[2] = {52.460707f, 13.503987f};
+		if (opts.dbgroutes)
+		{
+			// debug routes
+			float p2[2] = {52.458865f, 13.506573f}; //270m
+			float p3[2] = {52.452931f, 13.515043f}; //350m
+			route *r = trans->get_route();
+			r->set_start_time(millis() + 1000);
+			r->add_destination(p1[0], p1[1]);
+			r->add_destination(p2[0], p2[1]);
+			r->add_destination(p3[0], p3[1]);
+			r->reset();
+			trans->on_start(latlng(p1[0], p1[1]));
+		} else {
+			// TODO: use correct starting position
+			trans->on_start(latlng(p1[0], p1[1]));
 		}
 
 		int foundSenorCount = controller->find_and_add_sensors();

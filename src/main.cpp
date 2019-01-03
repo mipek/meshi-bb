@@ -18,12 +18,12 @@ extern "C" int main(int argc, char *argv[])
 
 	ClientControllerOptions ccopts;
 	int opt;
-	while ((opt = getopt (argc, argv, "hs:p:i:d")) != -1)
+	while ((opt = getopt (argc, argv, "hs:p:i:dr")) != -1)
 	{
 		switch (opt)
 		{
 		case 'h':
-			c_printf("-d create debug sensors\n-i <BlackBox-ID>\nDebug-Interface:\n\t-s <HOST_ADDRESS>\n\t-p <HOST_PORT>\n");
+			c_printf("-r use debug routes\n-d create debug sensors\n-i <BlackBox-ID>\nDebug-Interface:\n\t-s <HOST_ADDRESS>\n\t-p <HOST_PORT>\n");
 			return 0;
 		case 's':
 			ccopts.host = optarg;
@@ -36,6 +36,9 @@ extern "C" int main(int argc, char *argv[])
 			break;
 		case 'd':
 			ccopts.dbgsensors = true;
+			break;
+		case 'r':
+			ccopts.dbgroutes = true;
 			break;
 		}
 	}

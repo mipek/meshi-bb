@@ -6,24 +6,27 @@
 #include <string>
 #include <vector>
 #include <transmission.h>
+#include <transport.h>
 
 /* forward declaration */
 class sensor;
 
 struct ClientControllerOptions
 {
-	ClientControllerOptions(): port(0), bbid(0), dbgsensors(false)
+	ClientControllerOptions(): port(0), bbid(0), dbgsensors(false), dbgroutes(false)
 	{
 	}
 	std::string host;
 	int port;
 	uint16_t bbid;
 	bool dbgsensors;
+	bool dbgroutes;
 };
 
 class client_controller: public controller, public message_listener
 {
 	transmission *trnsmsn_;
+	transport *transport_;
 	std::vector<sensor*> sensors_;
 	std::vector<position> routes_;
 	uint64_t last_tick_;
@@ -53,6 +56,9 @@ public:
 		return sensors_[idx];
 	}
 	void destroy_all_sensors();
+
+	void set_transport(transport *t) { transport_ = t; }
+	transport *get_transport() { return transport_; }
 
 	static controller *make(ClientControllerOptions const& opts);
 
