@@ -11,11 +11,6 @@
 #include "plat_compat.h"
 #include <ctime>
 
-Error create_webcam(webcam **, int id, int width, int height)
-{
-	return (Error)1;
-}
-
 /**
  * Simple debug implementation for sensors (used for mocking)
  */
@@ -136,7 +131,7 @@ void client_controller::on_tick()
 			sensor_value value;
 			sensor->get_value(value);
 
-			builder.write_byte((uint8_t)sensor->classify());
+			builder.write_byte((uint8_t)sensor->id());
 			switch (sensor->classify())
 			{
 			case sensor_types::temperature:
