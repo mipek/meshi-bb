@@ -16,7 +16,11 @@ class route
 	unsigned int start_time_;
 	std::deque<latlng> pos_;
 	std::deque<latlng>::iterator current_;
+	bool repeating_;
 public:
+	route() {
+		current_ = pos_.end();
+	}
 	unsigned int get_start_time() const {
 		return start_time_;
 	}
@@ -24,17 +28,27 @@ public:
 		return *current_;
 	}
 	bool has_next() {
-		return current_ != pos_.end();
+		return !pos_.empty() && current_ != pos_.end();
 	}
 	void advance() {
-		current_++;
+		if (has_next()) {
+			current_++;
+		}
 	}
 	void reset() {
 		current_ = pos_.begin();
 	}
-	void add_checkpoint(float lat, float lng) {
+	void set_start_time(unsigned int time) {
+		start_time_ = time;
+	}
+	void add_destination(float lat, float lng) {
 		pos_.emplace_back(lat, lng);
 	}
+	void clear_destinations() {
+		pos_.clear();
+	}
+	bool is_repeating() const { return repeating_; }
+	void set_repeating(bool repeat) { repeating_ = repeat; }
 };
 
 // this class specifies all possible notifications from our transport system
@@ -52,10 +66,6 @@ public:
 	virtual void set_listener(transport_listener *callback) =0;
 	virtual transport_listener *get_listener() =0;
 	virtual route *get_route() =0;
-
-	void add_destination(float lat, float lng) {
-		get_route()->add_checkpoint(latlng(lat, lng));
-	}
 };
 
 #endif //_include_public_transport_h_
