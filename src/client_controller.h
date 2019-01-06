@@ -28,7 +28,6 @@ class client_controller: public controller, public message_listener
 	transmission *trnsmsn_;
 	transport *transport_;
 	std::vector<sensor*> sensors_;
-	std::vector<position> routes_;
 	uint64_t last_tick_;
 	uint16_t bbid_;
 	bool running_;

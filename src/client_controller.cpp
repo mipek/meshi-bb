@@ -191,17 +191,23 @@ void client_controller::on_message_events(const uint8_t *payload)
 
 void client_controller::on_message_routes(const uint8_t *payload)
 {
-	uint8_t rcount = *payload++;
-	uint32_t stime = *(uint32_t*)(payload);
-	payload += sizeof(uint32_t);
+	transport *transport = get_transport();
+	if (transport) {
+		route *route = transport->get_route();
 
-	routes_.reserve(rcount);
-	for (uint8_t i = 0; i < rcount; ++i) {
-		float lat = *(float*)payload;
-		payload += sizeof(float);
-		float lng = *(float*)payload;
-		payload += sizeof(float);
-		routes_.push_back({ lat, lng });
+		uint8_t rcount = *payload++;
+		uint32_t stime = *(uint32_t*)(payload);
+		payload += sizeof(uint32_t);
+
+		route->clear_destinations();
+		for (uint8_t i = 0; i < rcount; ++i) {
+			float lat = *(float*)payload;
+			payload += sizeof(float);
+			float lng = *(float*)payload;
+			payload += sizeof(float);
+
+			route->add_destination(lat, lng);
+		}
 	}
 }
 
