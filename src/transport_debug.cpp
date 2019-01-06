@@ -38,7 +38,6 @@ void transport_debug::on_update(latlng const& curpos) {
 		return;
 	}
 
-	//c_printf("{g}info: {d}time left {m}%d\n", (dest_time_-(unsigned int)millis()));
 	if (millis() >= dest_time_) {
 		startpos_ = destpos_;
 		on_reach_destination();

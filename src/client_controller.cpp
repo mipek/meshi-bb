@@ -199,6 +199,7 @@ void client_controller::on_message_routes(const uint8_t *payload)
 		uint32_t stime = *(uint32_t*)(payload);
 		payload += sizeof(uint32_t);
 
+		route->set_start_time((uint64_t)stime);
 		route->clear_destinations();
 		for (uint8_t i = 0; i < rcount; ++i) {
 			float lat = *(float*)payload;
@@ -208,6 +209,9 @@ void client_controller::on_message_routes(const uint8_t *payload)
 
 			route->add_destination(lat, lng);
 		}
+
+		// TODO: replace with real GPS data
+		transport->on_start(latlng(13.45f, 13.51f));
 	}
 }
 
