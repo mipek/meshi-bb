@@ -9,6 +9,7 @@
 #include "sensor_thermal.h"
 #include "drivers/MAX30105.h"
 #include "plat_compat.h"
+#include "minmea/minmea.h"
 #include <ctime>
 
 /**
@@ -48,7 +49,7 @@ class sensor_max30105 : public sensor
 	int id_;
 	MAX30105 ps_;
 public:
-	sensor_max30105(int bus, uint8_t address) : ps_(bus, address)
+	sensor_max30105(int bus, uint8_t address) : id_(3), ps_(bus, address)
 	{
 		ps_.setup(); // TODO: make params configurable?
 	}
@@ -86,10 +87,17 @@ public:
 client_controller::~client_controller()
 {
 	destroy_all_sensors();
+	if (gpsuart_) {
+		fclose(gpsuart_);
+		gpsuart_ = NULL;
+	}
 }
 
 void client_controller::on_start()
 {
+	// get GPS data via UART
+	gpsuart_ = fopen("/dev/ttyS0", "rt");
+
 	// announce what kind of sensors we've got
 	message_builder builder;
 	builder.begin_message(packet_id::c2s_sensors, packet_flags::reliable,
@@ -112,10 +120,12 @@ void client_controller::on_tick()
 	uint64_t now = millis();
 	if (now - last_tick_ > 100)
 	{
+		update_gps();
+
 		// check if any data is available to be received
 		trnsmsn_->update(this);
 
-		transport_->on_update(latlng(13.45f, 13.51f));
+		transport_->on_update(latlng(lat_, lng_));
 
 		// prepare measurement packet
 		message_builder builder;
@@ -128,6 +138,8 @@ void client_controller::on_tick()
 		bool invalid_sensor_type = false;
 		for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
 			sensor *sensor = sensors_[i];
+			sensor->update();
+
 			sensor_value value;
 			sensor->get_value(value);
 
@@ -181,6 +193,57 @@ void client_controller::on_message(message const& msg)
 	}
 }
 
+void client_controller::on_reach_destination(latlng const& pos)
+{
+	// prepare measurement packet
+	message_builder builder;
+	builder.begin_message(packet_id::c2s_measurement, packet_flags::none,
+		bbid_, (uint32_t)time(NULL), position(pos.lat, pos.lng));
+
+	builder.write_byte(0); // EventID
+	builder.write_byte((uint8_t)get_sensor_count());
+
+	bool invalid_sensor_type = false;
+	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
+		sensor *sensor = sensors_[i];
+		sensor->update();
+
+		sensor_value value;
+		sensor->get_value(value);
+
+		
+		switch (sensor->classify())
+		{
+		case sensor_types::temperature:
+			if (value.get_value_count() == 1) {
+				builder.write_byte((uint8_t)sensor->id());
+
+				builder.write_byte(value.get_value(0).iValue);
+			}
+			break;
+		case sensor_types::particles:
+			if (value.get_value_count() == 4) {
+				builder.write_byte((uint8_t)sensor->id());
+
+				builder.write_byte(value.get_value(0).iValue);
+				builder.write_byte(value.get_value(1).iValue);
+				builder.write_byte(value.get_value(2).iValue);
+				builder.write_byte(value.get_value(3).iValue);
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (!invalid_sensor_type) {
+		// send measurement packet
+		message msg;
+		builder.finalize_message(msg);
+		trnsmsn_->send_message(msg);
+	}
+}
+
 void client_controller::on_message_events(const uint8_t *payload)
 {
 	uint8_t ecount = *payload++;
@@ -210,8 +273,11 @@ void client_controller::on_message_routes(const uint8_t *payload)
 			route->add_destination(lat, lng);
 		}
 
-		// TODO: replace with real GPS data
-		transport->on_start(latlng(13.45f, 13.51f));
+		// first destination is starting point
+		if (rcount > 0) {
+			route->reset();
+			transport->on_start(route->get_destination());
+		}
 	}
 }
 
@@ -262,9 +328,6 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 			r->add_destination(p3[0], p3[1]);
 			r->reset();
 			trans->on_start(latlng(p1[0], p1[1]));
-		} else {
-			// TODO: use correct starting position
-			trans->on_start(latlng(p1[0], p1[1]));
 		}
 
 		int foundSenorCount = controller->find_and_add_sensors();
@@ -314,4 +377,83 @@ int client_controller::find_and_add_sensors()
 	}
 	
 	return count;
+}
+
+void client_controller::update_gps()
+{
+	if (!gpsuart_) return;
+
+	char line[MINMEA_MAX_LENGTH];
+	while (fgets(line, sizeof(line), gpsuart_) != NULL) {
+		switch (minmea_sentence_id(line, false)) {
+			case MINMEA_SENTENCE_RMC: {
+				struct minmea_sentence_rmc frame;
+				if (minmea_parse_rmc(&frame, line)) {
+					printf("$RMC floating point degree coordinates and speed: (%f,%f) %f\n",
+							minmea_tocoord(&frame.latitude),
+							minmea_tocoord(&frame.longitude),
+							minmea_tofloat(&frame.speed));
+					lat_ = minmea_tocoord(&frame.latitude);
+					lng_ = minmea_tocoord(&frame.longitude);
+				}
+			} break;
+		}
+	}
+}
+
+static uint8_t sensor_type_to_frame_type(sensor_type type)
+{
+	switch (type)
+	{
+		case sensor_types::thermal:
+			return 2;
+		case sensor_types::color:
+			return 0;
+		default:
+			return 0xff;
+	}
+}
+
+bool client_controller::send_frame(int sensorid)
+{
+	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
+		sensor *sensor = sensors_[i];
+		uint8_t frame_type = sensor_type_to_frame_type(sensor);
+		if (frame_type != 0xff) {
+			return send_frame(sensor, frame_type);
+		}
+	}
+	return false;
+}
+
+bool client_controller::send_frame(sensor *sensor, uint8_t frame_type)
+{
+static const int MAX_PACKET_SIZE = 1000; // TODO: move into transmission interface
+	sensor_value value;
+	if (sensor->get_value(value)) {
+		webcam *webcam = reinterpret_cast<webcam*>(value.get_value(0).pValuePtr);
+		int width = webcam->get_width();
+		int height = webcam->get_height();
+		
+		uint8_t *bytes;
+		int64_t size = (int64_t)webcam->get_frame_buffer(&bytes);
+		while (size > 0) {
+			message_builder builder;
+			builder.begin_message(packet_id::c2s_frame, packet_flags::reliable,
+				bbid_, (uint32_t)time(NULL), position(pos.lat, pos.lng));
+
+			builder.write_byte(frame_type);
+			builder.write_dword(width);
+			builder.write_dword(height);
+			for (int i=0; i<min(size, MAX_PACKET_SIZE); ++i) {
+				builder.write_byte(bytes[i]);
+			}
+
+			message msg;
+			builder.finalize_message(msg);
+			trnsmsn_->send_message(msg);
+
+			size -= MAX_PACKET_SIZE;
+		}
+	}
 }

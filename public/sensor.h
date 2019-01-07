@@ -20,6 +20,7 @@ struct sensor_value
 			bool bValue;
 			int iValue;
 			float flValue;
+			void *pValuePtr;
 		};
 	};
 

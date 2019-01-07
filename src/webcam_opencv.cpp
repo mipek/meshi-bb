@@ -6,6 +6,13 @@
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
+static uint8_t *mat_to_bytes(Mat const& mat, size_t &size)
+{
+	size = mat.total() * mat.elemSize();
+	uint8_t *bytes = new uint8_t[size];
+	memcpy(bytes, mat.data(), size * sizeof(uint8_t));
+}
+
 /**
  * Webcam implementation using OpenCV
  */
@@ -14,6 +21,7 @@ class webcam_opencv: public webcam
 	VideoCapture cap_;
 	int deviceNum_;
 	Mat frame_;
+	uint8_t *old_buffer_;
 public:
 	webcam_opencv(VideoCapture &vc, int deviceNum): cap_(vc), deviceNum_(deviceNum)
 	{
@@ -21,6 +29,7 @@ public:
 	}
 	virtual ~webcam_opencv()
 	{
+		destroy_buffer();
 	}
 	virtual int get_width() const
 	{
@@ -43,9 +52,23 @@ public:
 	}
 	virtual size_t get_frame_buffer(void **dest) override
 	{
-		//*dest = params_.mTargetBuf;
-		//return get_width() * get_height() * sizeof(int);
-		return 0;
+		// destroy the old framebuffer (if any)
+		destroy_buffer();
+		// allocate a new one
+		size_t sz;
+		old_buffer_ = mat_to_bytes(frame_, sz);
+		// return data
+		*dest = (void*)old_buffer_;
+		return sz;
+	}
+private:
+	void destroy_buffer()
+	{
+		if (old_buffer_)
+		{
+			delete [] old_buffer_;
+			old_buffer_ = NULL;
+		}
 	}
 };
 

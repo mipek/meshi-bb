@@ -56,7 +56,7 @@ public:
 class transport_listener
 {
 public:
-	virtual void on_reach_destination() =0;
+	virtual void on_reach_destination(latlng const& pos) =0;
 };
 
 class transport

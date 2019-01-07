@@ -3,6 +3,7 @@
 
 #include <controller.h>
 #include <cstdint>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <transmission.h>
@@ -23,16 +24,18 @@ struct ClientControllerOptions
 	bool dbgroutes;
 };
 
-class client_controller: public controller, public message_listener
+class client_controller: public controller, public message_listener, public transport_listener
 {
+	FILE *gpsuart_;
 	transmission *trnsmsn_;
 	transport *transport_;
 	std::vector<sensor*> sensors_;
 	uint64_t last_tick_;
+	float lat_, lng_;
 	uint16_t bbid_;
 	bool running_;
 public:
-	client_controller(transmission *trnsmsn): trnsmsn_(trnsmsn), last_tick_(0), running_(true)
+	client_controller(transmission *trnsmsn): gpsuart_(NULL), trnsmsn_(trnsmsn), last_tick_(0), running_(true), lat_(13.45f), lng_(13.51f)
 	{
 	}
 	virtual ~client_controller();
@@ -63,6 +66,7 @@ public:
 
 public:
 	void on_message(message const& msg);
+	void on_reach_destination(latlng const& pos);
 
 private:
 	void on_message_events(const uint8_t *payload);
@@ -70,6 +74,9 @@ private:
 
 private:
 	int find_and_add_sensors();
+	void update_gps();
+	bool send_frame(int sensorid);
+	bool send_frame(sensor *sensor, uint8_t frame_type);
 };
 
 #endif //_include_client_controller_

@@ -26,14 +26,12 @@ public:
 	{
 		return "FLIR Lepton 3";
 	}
-	virtual bool get_value(sensor_value &value)
-	{
-		return false;
-	}
+	virtual bool get_value(sensor_value &value);
 	virtual bool check_value(sensor_value const& value)
 	{
 		return false;
 	}
+	virtual void update();
 
 	static Error create_sensor(sensor **sensor);
 };

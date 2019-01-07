@@ -140,6 +140,7 @@ void transmission_debug::update(message_listener *listener)
 						found_ack_msg = true;
 						ack_msg_index = i;
 
+						c_printf("{g}info: {d}receiving ACK-message\n");
 						delete wait;
 					}
 				}
