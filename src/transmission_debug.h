@@ -15,13 +15,13 @@ struct ack_wait
 	ack_wait()
 	{
 	}
-	ack_wait(message const& m, uint64_t st): msg(m), send_time(st)
+	/*ack_wait(message const& m, uint64_t st): msg(m), send_time(st)
 	{
 	}
 	ack_wait(ack_wait const& o): msg(o.msg), send_time(o.send_time)
 	{
-	}
-	message msg;
+	}*/
+	message *msg;
 	uint64_t send_time;
 };
 

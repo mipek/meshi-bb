@@ -12,7 +12,10 @@
 #include "minmea/minmea.h"
 #include "webcam.h"
 #include <ctime>
-#include <algorithm>
+
+#ifndef min_value
+#define min_value(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
 
 /**
  * Simple debug implementation for sensors (used for mocking)
@@ -34,7 +37,7 @@ public:
 		value.sensorid_ = id();
 		value.vcount_ = 1;
 		value.values_ = new sensor_value::any[value.vcount_];
-		value.values_[0].iValue = 22;//rand();
+		value.values_[0].iValue = 42;//rand();
 		return true;
 	}
 	virtual bool check_value(sensor_value const& value)
@@ -139,7 +142,7 @@ void client_controller::on_tick()
 
 		bool invalid_sensor_type = false;
 		for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
-			sensor *sensor = sensors_[i];
+ 			sensor *sensor = sensors_[i];
 			sensor->update();
 
 			sensor_value value;
@@ -447,7 +450,7 @@ static const int MAX_PACKET_SIZE = 1000; // TODO: move into transmission interfa
 			builder.write_byte(frame_type);
 			builder.write_dword(width);
 			builder.write_dword(height);
-			for (int i=0; i<std::min((int)size, MAX_PACKET_SIZE); ++i) {
+			for (int i=0; i<min_value((int)size, MAX_PACKET_SIZE); ++i) {
 				builder.write_byte(bytes[i]);
 			}
 

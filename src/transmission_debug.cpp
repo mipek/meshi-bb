@@ -97,8 +97,14 @@ size_t transmission_debug::send_message(message const& msg)
 
 	// save send time if this message was marked as reliable.
 	if (msg.get_flags() & (uint8_t)packet_flags::reliable) {
+		
+		// TODO: properly fix this
+		uint8_t *data = new uint8_t[msg.len];
+		memcpy(data, msg.data, msg.len);
+		message *msgcopy = new message(data, msg.len);
+
 		ack_wait *wait = new ack_wait;
-		wait->msg = msg;
+		wait->msg = msgcopy;
 		wait->send_time = millis();
 
 		waiting_for_ack.push_back(wait);
@@ -132,7 +138,7 @@ void transmission_debug::update(message_listener *listener)
 				bool found_ack_msg = false;
 				for (std::vector<ack_wait>::size_type i = 0; i < waiting_for_ack.size(); ++i) {
 					ack_wait *wait = waiting_for_ack[i];
-					const message &wfa_msg = wait->msg;
+					const message &wfa_msg = *wait->msg;
 					if (wfa_msg.get_packet_id() == msg.get_packet_id() &&
 						wfa_msg.get_bbid() == msg.get_bbid() &&
 						wfa_msg.get_packet_number() == msg.get_packet_number())
@@ -141,6 +147,7 @@ void transmission_debug::update(message_listener *listener)
 						ack_msg_index = i;
 
 						c_printf("{g}info: {d}receiving ACK-message\n");
+						delete wait->msg; // TODO: replace this workaround
 						delete wait;
 					}
 				}
@@ -163,11 +170,11 @@ void transmission_debug::update(message_listener *listener)
 	if (!waiting_for_ack.empty()) {
 		uint64_t now = millis();
 		for (std::vector<ack_wait>::size_type i = 0; i < waiting_for_ack.size(); ++i) {
-			message &msg = waiting_for_ack[i]->msg;
+			message &msg = *waiting_for_ack[i]->msg;
 			uint64_t send_time = waiting_for_ack[i]->send_time;
 
 			if (now - send_time > packet_reliable_timeout) {
-				c_printf("{y}warn: {d}re-sending reliable message (packet number: %d)\n", msg.get_packet_number());
+ 				c_printf("{y}warn: {d}re-sending reliable message (packet number: %d)\n", msg.get_packet_number());
 				send(msg.data, msg.len);
 				waiting_for_ack[i]->send_time = now;
 			}

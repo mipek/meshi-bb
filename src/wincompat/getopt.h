@@ -112,7 +112,7 @@ extern char __declspec(dllimport) *__progname;
 #ifdef __CYGWIN__
 static char EMSG[] = "";
 #else
-#define	EMSG		""
+#define	EMSG		(char*)""
 #endif
 
 static int getopt_internal(int, char * const *, const char *,
@@ -122,7 +122,7 @@ static int parse_long_options(char * const *, const char *,
 static int gcd(int, int);
 static void permute_args(int, int, int, char * const *);
 
-static char *place = EMSG; /* option letter processing */
+static char *place = (char*)EMSG; /* option letter processing */
 
 /* XXX: set optreset to 1 rather than these two */
 static int nonopt_start = -1; /* first non option argument (for permute) */

@@ -14,6 +14,10 @@
 #include <stdarg.h>
 #include <time.h>
 
+#ifdef _MSC_VER
+#define timegm _mkgmtime
+#endif
+
 #define boolstr(s) ((s) ? "true" : "false")
 
 static int hex2int(char c)

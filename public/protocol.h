@@ -8,7 +8,7 @@ static const int packet_c2s_header_size = 19;
 static const int packet_s2c_header_size = 7;
 static const int packet_max_size = 1024;
 
-static const int packet_reliable_timeout = 1500; // after how many millis a reliable packet is considered lost.
+static const int packet_reliable_timeout = 15000; // after how many millis a reliable packet is considered lost.
 
 enum class packet_id
 {
