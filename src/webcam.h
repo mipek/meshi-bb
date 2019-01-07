@@ -1,5 +1,5 @@
-#ifndef _include_webcam_h_
-#define _include_webcam_h_
+#ifndef _include_iwebcam_h_
+#define _include_iwebcam_h_
 
 #include "errors.h"
 
@@ -16,4 +16,4 @@ public:
 
 Error create_webcam(webcam **cam, int id, int width, int height);
 
-#endif //_include_webcam_h_
+#endif //_include_iwebcam_h_

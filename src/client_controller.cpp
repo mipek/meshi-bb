@@ -10,7 +10,9 @@
 #include "drivers/MAX30105.h"
 #include "plat_compat.h"
 #include "minmea/minmea.h"
+#include "webcam.h"
 #include <ctime>
+#include <algorithm>
 
 /**
  * Simple debug implementation for sensors (used for mocking)
@@ -198,7 +200,7 @@ void client_controller::on_reach_destination(latlng const& pos)
 	// prepare measurement packet
 	message_builder builder;
 	builder.begin_message(packet_id::c2s_measurement, packet_flags::none,
-		bbid_, (uint32_t)time(NULL), position(pos.lat, pos.lng));
+		bbid_, (uint32_t)time(NULL), position(pos.latitude, pos.longitude));
 
 	builder.write_byte(0); // EventID
 	builder.write_byte((uint8_t)get_sensor_count());
@@ -401,7 +403,7 @@ void client_controller::update_gps()
 	}
 }
 
-static uint8_t sensor_type_to_frame_type(sensor_type type)
+static uint8_t sensor_type_to_frame_type(sensor_types type)
 {
 	switch (type)
 	{
@@ -418,7 +420,7 @@ bool client_controller::send_frame(int sensorid)
 {
 	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
 		sensor *sensor = sensors_[i];
-		uint8_t frame_type = sensor_type_to_frame_type(sensor);
+		uint8_t frame_type = sensor_type_to_frame_type(sensor->classify());
 		if (frame_type != 0xff) {
 			return send_frame(sensor, frame_type);
 		}
@@ -431,21 +433,21 @@ bool client_controller::send_frame(sensor *sensor, uint8_t frame_type)
 static const int MAX_PACKET_SIZE = 1000; // TODO: move into transmission interface
 	sensor_value value;
 	if (sensor->get_value(value)) {
-		webcam *webcam = reinterpret_cast<webcam*>(value.get_value(0).pValuePtr);
-		int width = webcam->get_width();
-		int height = webcam->get_height();
+		webcam *wc = (webcam*)(value.get_value(0).pValuePtr);
+		int width = wc->get_width();
+		int height = wc->get_height();
 		
 		uint8_t *bytes;
-		int64_t size = (int64_t)webcam->get_frame_buffer(&bytes);
+		int64_t size = (int64_t)wc->get_frame_buffer((void**)&bytes);
 		while (size > 0) {
 			message_builder builder;
 			builder.begin_message(packet_id::c2s_frame, packet_flags::reliable,
-				bbid_, (uint32_t)time(NULL), position(pos.lat, pos.lng));
+				bbid_, (uint32_t)time(NULL), position(lat_, lng_));
 
 			builder.write_byte(frame_type);
 			builder.write_dword(width);
 			builder.write_dword(height);
-			for (int i=0; i<min(size, MAX_PACKET_SIZE); ++i) {
+			for (int i=0; i<std::min((int)size, MAX_PACKET_SIZE); ++i) {
 				builder.write_byte(bytes[i]);
 			}
 
@@ -455,5 +457,7 @@ static const int MAX_PACKET_SIZE = 1000; // TODO: move into transmission interfa
 
 			size -= MAX_PACKET_SIZE;
 		}
+		return true;
 	}
+	return false;
 }
