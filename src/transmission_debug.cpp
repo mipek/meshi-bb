@@ -147,7 +147,7 @@ void transmission_debug::update(message_listener *listener)
 				if (found_ack_msg) {
 					waiting_for_ack.erase(waiting_for_ack.begin() + ack_msg_index);
 				} else {
-					c_printf("{r}error: {d}received ACK message without sending a reliable message\n");
+					c_printf("{r}error: {d}received ACK message but couldn't find matching reliable message\n");
 				}
 			}
 
@@ -166,6 +166,8 @@ void transmission_debug::update(message_listener *listener)
 			uint64_t send_time = waiting_for_ack[i]->send_time;
 
 			if (now - send_time > packet_reliable_timeout) {
+				c_printf("{y}warn: {d}re-sending reliable message (packet number: %d)\n", msg.get_packet_number());
+				send(msg.data, msg.len);
 				waiting_for_ack[i]->send_time = now;
 			}
 		}
