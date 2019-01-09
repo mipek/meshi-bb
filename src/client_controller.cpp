@@ -98,6 +98,15 @@ client_controller::~client_controller()
 	}
 }
 
+void client_controller::register_sensor(sensor *s)
+{
+	sensors_.push_back(s);
+	sensor_types type = s->classify();
+	if (type != sensor_types::thermal && type != sensor_types::color) {
+		sensor_count_++;
+	}
+}
+
 void client_controller::on_start()
 {
 	// get GPS data via UART
@@ -108,8 +117,8 @@ void client_controller::on_start()
 	builder.begin_message(packet_id::c2s_sensors, packet_flags::reliable,
 		bbid_, (uint32_t)time(NULL), position(52.31f, 13.63f));
 
-	builder.write_byte((uint8_t)get_sensor_count());
-	for (size_t i = 0; i < get_sensor_count(); ++i) {
+	builder.write_byte((uint8_t)sensors_.size());
+	for (size_t i = 0; i < sensors_.size(); ++i) {
 		sensor *sensor = get_sensor(i);
 		builder.write_byte((uint8_t)sensor->id());
 		builder.write_byte((uint8_t)sensor->classify());
@@ -132,55 +141,8 @@ void client_controller::on_tick()
 
 		transport_->on_update(latlng(lat_, lng_));
 
-		// prepare measurement packet
-		message_builder builder;
-		builder.begin_message(packet_id::c2s_measurement, packet_flags::none,
-			bbid_, (uint32_t)time(NULL), position(52.31f, 13.63f));
-
-		builder.write_byte(0); // EventID
-		builder.write_byte((uint8_t)get_sensor_count());
-
-		bool invalid_sensor_type = false;
-		for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
- 			sensor *sensor = sensors_[i];
-			sensor->update();
-
-			sensor_value value;
-			sensor->get_value(value);
-
-			builder.write_byte((uint8_t)sensor->id());
-			switch (sensor->classify())
-			{
-			case sensor_types::temperature:
-				if (value.get_value_count() == 1) {
-					builder.write_byte(value.get_value(0).iValue);
-				} else {
-					invalid_sensor_type = true;
-				}
-				break;
-			case sensor_types::particles:
-				if (value.get_value_count() == 4) {
-					builder.write_byte(value.get_value(0).iValue);
-					builder.write_byte(value.get_value(1).iValue);
-					builder.write_byte(value.get_value(2).iValue);
-					builder.write_byte(value.get_value(3).iValue);
-				}
-				else {
-					invalid_sensor_type = true;
-				}
-				break;
-			default:
-				invalid_sensor_type = true; // sensor type currently unsupported
-				break;
-			}
-		}
-
-		if (!invalid_sensor_type) {
-			// send measurement packet
-			message msg;
-			builder.finalize_message(msg);
-			trnsmsn_->send_message(msg);
-		}
+		// TODO: this is for debugging only, send measurements every now and then
+		on_reach_destination(latlng(lat_, lng_));
 
 		last_tick_ = now;
 	} else {
@@ -190,7 +152,7 @@ void client_controller::on_tick()
 
 void client_controller::on_message(message const& msg)
 {
-	const uint8_t *payload = msg.get_payload();
+	const uint8_t *payload = msg.get_s2c_payload();
 	switch (msg.get_packet_id()) {
 	case packet_id::s2c_routes:
 		on_message_routes(payload);
@@ -209,10 +171,9 @@ void client_controller::on_reach_destination(latlng const& pos)
 		bbid_, (uint32_t)time(NULL), position(pos.latitude, pos.longitude));
 
 	builder.write_byte(0); // EventID
-	builder.write_byte((uint8_t)get_sensor_count());
+	builder.write_byte((uint8_t)get_real_sensor_count());
 
-	bool invalid_sensor_type = false;
-	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
+	for (std::vector<sensor*>::size_type i = 0; i < get_real_sensor_count(); ++i) {
 		sensor *sensor = sensors_[i];
 		sensor->update();
 
@@ -244,12 +205,10 @@ void client_controller::on_reach_destination(latlng const& pos)
 		}
 	}
 
-	if (!invalid_sensor_type) {
-		// send measurement packet
-		message msg;
-		builder.finalize_message(msg);
-		trnsmsn_->send_message(msg);
-	}
+	// send measurement packet
+	message msg;
+	builder.finalize_message(msg);
+	trnsmsn_->send_message(msg);
 }
 
 void client_controller::on_message_events(const uint8_t *payload)
@@ -270,7 +229,12 @@ void client_controller::on_message_routes(const uint8_t *payload)
 		uint32_t stime = *(uint32_t*)(payload);
 		payload += sizeof(uint32_t);
 
-		route->set_start_time((uint64_t)stime);
+		if (stime == 0) {
+			// TODO: temporary hotfix
+			route->set_start_time(millis());
+		} else {
+			route->set_start_time(((uint64_t) stime) / 1000);
+		}
 		route->clear_destinations();
 		for (uint8_t i = 0; i < rcount; ++i) {
 			float lat = *(float*)payload;
@@ -358,8 +322,9 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 
 static bool check_i2c_availability(int bus)
 {
-	i2c_master i2c(bus);
-	return i2c.is_valid();
+	//i2c_master i2c(bus);
+	//return i2c.is_valid();
+	return false;
 }
 
 int client_controller::find_and_add_sensors()

@@ -30,12 +30,14 @@ class client_controller: public controller, public message_listener, public tran
 	transmission *trnsmsn_;
 	transport *transport_;
 	std::vector<sensor*> sensors_;
+	int sensor_count_;
 	uint64_t last_tick_;
 	float lat_, lng_;
 	uint16_t bbid_;
 	bool running_;
 public:
-	client_controller(transmission *trnsmsn): gpsuart_(NULL), trnsmsn_(trnsmsn), last_tick_(0), running_(true), lat_(52.326471f), lng_(13.707848f)
+	client_controller(transmission *trnsmsn): gpsuart_(NULL), trnsmsn_(trnsmsn), last_tick_(0), running_(true),
+                                              lat_(52.326471f), lng_(13.707848f), sensor_count_(0)
 	{
 	}
 	virtual ~client_controller();
@@ -45,13 +47,10 @@ public:
 	bool is_running() const { return running_; }
 	void set_running(bool running) { running_ = running; }
 
-	void register_sensor(sensor *s)
+	void register_sensor(sensor *s);
+	size_t get_real_sensor_count() const
 	{
-		sensors_.push_back(s);
-	}
-	size_t get_sensor_count() const
-	{
-		return sensors_.size();
+		return sensor_count_;
 	}
 	sensor *get_sensor(size_t idx)
 	{

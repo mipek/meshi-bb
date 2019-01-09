@@ -53,6 +53,11 @@ struct message
 		return (data + packet_c2s_header_size);
 	}
 
+	uint8_t *get_s2c_payload() const
+	{
+		return (data + packet_s2c_header_size);
+	}
+
 	uint8_t *data;
 	size_t len;
 };
