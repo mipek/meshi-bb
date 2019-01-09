@@ -293,6 +293,7 @@ void client_controller::on_message_routes(const uint8_t *payload)
 
 void client_controller::on_message_framereq(const uint8_t *payload)
 {
+	send_frame(*payload);
 }
 
 void client_controller::destroy_all_sensors()

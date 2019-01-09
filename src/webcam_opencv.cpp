@@ -51,7 +51,7 @@ public:
 			c_printf("{y}warn: {d}end of video stream (device_id=%d)\n", get_device_id());
 		}
 
-        //imwrite("/home/pi/camimg.png", frame_);
+        	imwrite("/home/pi/camimg.png", frame_);
 	}
 	virtual size_t get_frame_buffer(void **dest) override
 	{
