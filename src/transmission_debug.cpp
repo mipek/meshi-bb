@@ -133,7 +133,7 @@ void transmission_debug::update(message_listener *listener)
 		// is for a reliable message we send in the past.
 		// In every case, we hide this message from our message listener.
 		if (msg.get_flags() & (uint8_t)packet_flags::ack) {
-			if (msg.get_bbid() == bbid_) {
+			if (msg.get_bbid() == bbid_ && false) {
 				std::vector<ack_wait>::size_type ack_msg_index;
 				bool found_ack_msg = false;
 				for (std::vector<ack_wait>::size_type i = 0; i < waiting_for_ack.size(); ++i) {
@@ -163,7 +163,9 @@ void transmission_debug::update(message_listener *listener)
 			continue;
 		}
 
-		listener->on_message(msg);
+		if (msg.get_bbid() == bbid_) {
+            listener->on_message(msg);
+        }
 	}
 
 	// check if we need to re-send any reliable packets
