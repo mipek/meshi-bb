@@ -4,15 +4,8 @@
 #include "webcam.h"
 #include "cprintf.h"
 #include <opencv2/opencv.hpp>
+#include <vector>
 using namespace cv;
-
-static uint8_t *mat_to_bytes(Mat const& mat, size_t &size)
-{
-	size = mat.total() * mat.elemSize();
-	uint8_t *bytes = new uint8_t[size];
-	memcpy(bytes, mat.ptr(), size * sizeof(uint8_t));
-	return bytes;
-}
 
 /**
  * Webcam implementation using OpenCV
@@ -22,7 +15,7 @@ class webcam_opencv: public webcam
 	VideoCapture cap_;
 	int deviceNum_;
 	Mat frame_;
-	uint8_t *old_buffer_;
+    std::vector<uint8_t> frame_buffer_;
 public:
 	webcam_opencv(VideoCapture &vc, int deviceNum): cap_(vc), deviceNum_(deviceNum)
 	{
@@ -53,25 +46,20 @@ public:
 
         //imwrite("/home/pi/camimg.png", frame_);
 	}
-	virtual size_t get_frame_buffer(void **dest) override
-	{
-		// destroy the old framebuffer (if any)
-		destroy_buffer();
-		// allocate a new one
-		size_t sz;
-		old_buffer_ = mat_to_bytes(frame_, sz);
-		// return data
-		*dest = (void*)old_buffer_;
-		return sz;
+	virtual size_t get_frame_buffer(void **dest) override {
+        // destroy the old framebuffer (if any)
+        destroy_buffer();
+        // encode a new one
+        if (imencode("jpg", frame_, frame_buffer_)) {
+            *dest = (void *) &frame_buffer_[0];
+            return frame_buffer_.size();
+        }
+        return 0;
 	}
 private:
 	void destroy_buffer()
 	{
-		if (old_buffer_)
-		{
-			delete [] old_buffer_;
-			old_buffer_ = NULL;
-		}
+		frame_buffer_.clear();
 	}
 };
 
