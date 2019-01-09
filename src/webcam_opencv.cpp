@@ -10,7 +10,8 @@ static uint8_t *mat_to_bytes(Mat const& mat, size_t &size)
 {
 	size = mat.total() * mat.elemSize();
 	uint8_t *bytes = new uint8_t[size];
-	memcpy(bytes, mat.data(), size * sizeof(uint8_t));
+	memcpy(bytes, mat.ptr(), size * sizeof(uint8_t));
+	return bytes;
 }
 
 /**
