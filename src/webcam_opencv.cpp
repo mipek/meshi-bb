@@ -43,14 +43,13 @@ public:
 		if (frame_.empty()) {
 			c_printf("{y}warn: {d}end of video stream (device_id=%d)\n", get_device_id());
 		}
-
-        	imwrite("/home/pi/camimg.png", frame_);
 	}
-	virtual size_t get_frame_buffer(void **dest) override {
-        // destroy the old framebuffer (if any)
+	virtual size_t get_frame_buffer(void **dest) override
+	{
+        // free old framebuffer (if any)
         destroy_buffer();
         // encode a new one
-        if (imencode("jpg", frame_, frame_buffer_)) {
+        if (imencode(".jpg", frame_, frame_buffer_)) {
             *dest = (void *) &frame_buffer_[0];
             return frame_buffer_.size();
         }

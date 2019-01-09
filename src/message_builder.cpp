@@ -1,21 +1,25 @@
 #include "message_builder.h"
 #include "crc32.h"
 
+int message_builder::generate_packet_no()
+{
+	static uint8_t packet_number_seed = 0;
+	return packet_number_seed++;
+}
+
 message_builder::message_builder(): payload_offset_(0)
 {
 	byte_.reserve(20);
 }
 
-void message_builder::begin_message(packet_id id, packet_flags flags,
-	uint16_t bbid, uint32_t time, position const& pos)
+void message_builder::begin_message(packet_id id, packet_flags flags, int packet_no,
+									uint16_t bbid, uint32_t time, position const& pos)
 {
-	static uint8_t packet_number_seed = 0;
-
 	uint8_t packed_byte = (uint8_t)id | ((uint8_t)flags << 4);
 	write_byte(packed_byte);
 	write_dword(0);
 	write_short(bbid);
-	write_byte(packet_number_seed++);
+	write_byte(packet_no);
 
 	// data only being transmitted when doing a c2s send.
 	write_dword(time);
@@ -23,6 +27,12 @@ void message_builder::begin_message(packet_id id, packet_flags flags,
 	write_float(pos.lng_);
 
 	payload_offset_ = byte_.size();
+}
+
+void message_builder::begin_message(packet_id id, packet_flags flags,
+	uint16_t bbid, uint32_t time, position const& pos)
+{
+	begin_message(id, flags, message_builder::generate_packet_no(), bbid, time, pos);
 }
 
 void message_builder::write_byte(uint8_t val)

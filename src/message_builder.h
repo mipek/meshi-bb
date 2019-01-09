@@ -16,7 +16,10 @@ public:
 public: /* header */
 	void begin_message(packet_id id, packet_flags flags,
 		uint16_t bbid, uint32_t time, position const& latlng);
+	void begin_message(packet_id id, packet_flags flags, int packet_no,
+					   uint16_t bbid, uint32_t time, position const& latlng);
 
+	static int generate_packet_no();
 public: /* payload */
 	void write_byte(uint8_t val);
 	void write_short(uint16_t val);

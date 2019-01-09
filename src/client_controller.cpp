@@ -456,7 +456,7 @@ bool client_controller::send_frame(int sensorid)
 
 bool client_controller::send_frame(sensor *sensor, uint8_t frame_type)
 {
-static const int MAX_PACKET_SIZE = 1000; // TODO: move into transmission interface
+static const int MAX_PAYLOAD_SIZE = 800; // TODO: move into transmission interface
 	sensor_value value;
 	if (sensor->get_value(value)) {
 		webcam *wc = (webcam*)(value.get_value(0).pValuePtr);
@@ -465,26 +465,40 @@ static const int MAX_PACKET_SIZE = 1000; // TODO: move into transmission interfa
 		
 		uint8_t *bytes;
 		int64_t size = (int64_t)wc->get_frame_buffer((void**)&bytes);
+		uint16_t seq_num = 0;
+		uint16_t seq_total = size/MAX_PAYLOAD_SIZE + 1;
+		int packet_no = message_builder::generate_packet_no();
 		while (size > 0) {
 			message_builder builder;
-			builder.begin_message(packet_id::c2s_frame, packet_flags::none,
+			builder.begin_message(packet_id::c2s_frame, packet_flags::fragmented, packet_no,
 				bbid_, (uint32_t)time(NULL), position(lat_, lng_));
 
-			builder.write_byte(frame_type);
-			builder.write_dword(width);
-			builder.write_dword(height);
-			/*for (int i=0; i<min_value((int)size, MAX_PACKET_SIZE); ++i) {
+			builder.write_short(seq_num++);
+			builder.write_short(seq_total);
+
+			// TODO: this logic should be refactored into the transmission interface
+			int packet_size_left = MAX_PAYLOAD_SIZE;
+			if (seq_num == 1) {
+				builder.write_byte(frame_type);
+				builder.write_dword(width);
+				builder.write_dword(height);
+				packet_size_left -= sizeof(uint32_t)*2 + sizeof(uint8_t);
+			}
+
+			int chunk_size = min_value((int)size, packet_size_left);
+			for (int i=0; i<chunk_size; ++i) {
 				builder.write_byte(bytes[i]);
 			}
-			size -= MAX_PACKET_SIZE;*/
-			for (int64_t i=0; i<size; ++i) {
+			size -= chunk_size;
+			/*for (int64_t i=0; i<100; ++i) {
                 builder.write_byte(bytes[i]);
             }
-			size = 0;
+			size = 0;*/
 
-			//message msg;
-			//builder.finalize_message(msg);
-			//trnsmsn_->send_message(msg);
+			message msg;
+			builder.finalize_message(msg);
+			trnsmsn_->send_message(msg);
+			c_printf("{g}info: {d}send img %d %d/%d fragments (w=%d, h=%d)\n", msg.get_packet_id(), seq_num-1, seq_total, width, height);
 		}
 		return true;
 	}
