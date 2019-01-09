@@ -50,6 +50,8 @@ public:
 		if (frame_.empty()) {
 			c_printf("{y}warn: {d}end of video stream (device_id=%d)\n", get_device_id());
 		}
+
+        //imwrite("/home/pi/camimg.png", frame_);
 	}
 	virtual size_t get_frame_buffer(void **dest) override
 	{
@@ -73,22 +75,15 @@ private:
 	}
 };
 
-static int get_desired_device()
-{
-	// TODO: make this configurable
-	return 0;
-}
-
 ::Error create_webcam(webcam **cam, int id, int width, int height)
 {
-	int deviceNum = get_desired_device();
 	VideoCapture cap;
-	if (!cap.open(deviceNum)) {
-		c_printf("{y}warn: {d}couldn't initialize video capture (#%d)\n", deviceNum);
+	if (!cap.open(id)) {
+		c_printf("{y}warn: {d}couldn't initialize video capture (#%d)\n", id);
 		return kError_Webcam;
 	}
 
-	webcam_opencv *webcam = new webcam_opencv(cap, deviceNum);
+	webcam_opencv *webcam = new webcam_opencv(cap, id);
 
 	*cam = webcam;
 	return kError_None;

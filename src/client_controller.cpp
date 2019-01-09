@@ -123,7 +123,7 @@ void client_controller::on_start()
 void client_controller::on_tick()
 {
 	uint64_t now = millis();
-	if (now - last_tick_ > 100)
+	if (now - last_tick_ > 1000)
 	{
 		update_gps();
 
@@ -277,6 +277,8 @@ void client_controller::on_message_routes(const uint8_t *payload)
 			payload += sizeof(float);
 			float lng = *(float*)payload;
 			payload += sizeof(float);
+			float alt = *(float*)payload;
+			payload += sizeof(float);
 
 			route->add_destination(lat, lng);
 		}
@@ -426,6 +428,19 @@ static uint8_t sensor_type_to_frame_type(sensor_types type)
 	}
 }
 
+void client_controller::report_error(int errorid)
+{
+	message_builder builder;
+	builder.begin_message(packet_id::c2s_malfunction, packet_flags::reliable,
+						  bbid_, (uint32_t)time(NULL), position(lat_, lng_));
+
+	builder.write_short(errorid);
+
+	message msg;
+	builder.finalize_message(msg);
+	trnsmsn_->send_message(msg);
+}
+
 bool client_controller::send_frame(int sensorid)
 {
 	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
@@ -451,21 +466,24 @@ static const int MAX_PACKET_SIZE = 1000; // TODO: move into transmission interfa
 		int64_t size = (int64_t)wc->get_frame_buffer((void**)&bytes);
 		while (size > 0) {
 			message_builder builder;
-			builder.begin_message(packet_id::c2s_frame, packet_flags::reliable,
+			builder.begin_message(packet_id::c2s_frame, packet_flags::none,
 				bbid_, (uint32_t)time(NULL), position(lat_, lng_));
 
 			builder.write_byte(frame_type);
 			builder.write_dword(width);
 			builder.write_dword(height);
-			for (int i=0; i<min_value((int)size, MAX_PACKET_SIZE); ++i) {
+			/*for (int i=0; i<min_value((int)size, MAX_PACKET_SIZE); ++i) {
 				builder.write_byte(bytes[i]);
 			}
+			size -= MAX_PACKET_SIZE;*/
+			for (int64_t i=0; i<size; ++i) {
+                builder.write_byte(bytes[i]);
+            }
+			size = 0;
 
-			message msg;
-			builder.finalize_message(msg);
-			trnsmsn_->send_message(msg);
-
-			size -= MAX_PACKET_SIZE;
+			//message msg;
+			//builder.finalize_message(msg);
+			//trnsmsn_->send_message(msg);
 		}
 		return true;
 	}

@@ -13,6 +13,7 @@ file(GLOB blackbox_SRC
 	"src/*.cpp"
 	"src/drivers/*.h"
 	"src/drivers/*.cpp"
+	"src/minmea/*.c"
 	"public/*.h"
 )
 
