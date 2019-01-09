@@ -71,6 +71,7 @@ public:
 private:
 	void on_message_events(const uint8_t *payload);
 	void on_message_routes(const uint8_t *payload);
+	void on_message_framereq(const uint8_t *payload);
 
 private:
 	int find_and_add_sensors();

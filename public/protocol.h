@@ -15,7 +15,7 @@ enum class packet_id
 	c2s_sensors = 1,
 	s2c_events = 2,
 	s2c_routes = 3,
-	c2s_update = 4,
+	s2c_framereq = 4,
 	c2s_measurement = 5,
 	c2s_frame = 6,
 	c2s_malfunction = 7

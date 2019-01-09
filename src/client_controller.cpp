@@ -195,6 +195,9 @@ void client_controller::on_message(message const& msg)
 	case packet_id::s2c_routes:
 		on_message_routes(payload);
 		break;
+	case packet_id::s2c_framereq:
+		on_message_framereq(payload);
+		break;
 	}
 }
 
@@ -284,6 +287,10 @@ void client_controller::on_message_routes(const uint8_t *payload)
 			transport->on_start(route->get_destination());
 		}
 	}
+}
+
+void client_controller::on_message_framereq(const uint8_t *payload)
+{
 }
 
 void client_controller::destroy_all_sensors()
