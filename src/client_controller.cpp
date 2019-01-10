@@ -115,7 +115,7 @@ void client_controller::on_start()
 	// announce what kind of sensors we've got
 	message_builder builder;
 	builder.begin_message(packet_id::c2s_sensors, packet_flags::reliable,
-		bbid_, (uint32_t)time(NULL), position(52.31f, 13.63f));
+		bbid_, (uint32_t)time(NULL), position(lat_, lng_));
 
 	builder.write_byte((uint8_t)sensors_.size());
 	for (size_t i = 0; i < sensors_.size(); ++i) {
@@ -432,6 +432,7 @@ static const int MAX_PAYLOAD_SIZE = 800; // TODO: move into transmission interfa
 		int64_t size = (int64_t)wc->get_frame_buffer((void**)&bytes);
 		uint16_t seq_num = 0;
 		uint16_t seq_total = size/MAX_PAYLOAD_SIZE + 1;
+		uint64_t pos = 0;
 		int packet_no = message_builder::generate_packet_no();
 		while (size > 0) {
 			message_builder builder;
@@ -452,19 +453,15 @@ static const int MAX_PAYLOAD_SIZE = 800; // TODO: move into transmission interfa
 
 			int chunk_size = min_value((int)size, packet_size_left);
 			for (int i=0; i<chunk_size; ++i) {
-				builder.write_byte(bytes[i]);
+				builder.write_byte(bytes[pos++]);
 			}
 			size -= chunk_size;
-			/*for (int64_t i=0; i<100; ++i) {
-                builder.write_byte(bytes[i]);
-            }
-			size = 0;*/
 
 			message msg;
 			builder.finalize_message(msg);
 			trnsmsn_->send_message(msg);
-			c_printf("{g}info: {d}send img %d %d/%d fragments (w=%d, h=%d)\n", msg.get_packet_id(), seq_num-1, seq_total, width, height);
 		}
+		c_printf("{g}info: {d}send img packet_num=%d width=%d, height=%d\n", packet_no, width, height);
 		return true;
 	}
 	return false;
