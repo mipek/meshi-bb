@@ -23,7 +23,7 @@ extern "C" int main(int argc, char *argv[])
 		switch (opt)
 		{
 		case 'h':
-			c_printf("-r use debug routes\n-d create debug sensors\n-i <BlackBox-ID>\nDebug-Interface:\n\t-s <HOST_ADDRESS>\n\t-p <HOST_PORT>\n");
+			c_printf("-r use debug routes\n-d create debug sensors\n-c disable camera support\n-i <BlackBox-ID>\nDebug-Interface:\n\t-s <HOST_ADDRESS>\n\t-p <HOST_PORT>\n");
 			return 0;
 		case 's':
 			ccopts.host = optarg;

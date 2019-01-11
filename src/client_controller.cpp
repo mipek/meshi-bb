@@ -413,19 +413,19 @@ void client_controller::report_error(int errorid)
 	trnsmsn_->send_message(msg);
 }
 
-bool client_controller::send_frame(int sensorid)
+bool client_controller::send_frame(int sensorid, uint32_t etime)
 {
 	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
 		sensor *sensor = sensors_[i];
 		uint8_t frame_type = sensor_type_to_frame_type(sensor->classify());
 		if (frame_type != 0xff) {
-			return send_frame(sensor, frame_type);
+			return send_frame(sensor, frame_type, etime);
 		}
 	}
 	return false;
 }
 
-bool client_controller::send_frame(sensor *sensor, uint8_t frame_type)
+bool client_controller::send_frame(sensor *sensor, uint8_t frame_type, uint32_t etime)
 {
 	sensor_value value;
 	if (sensor->get_value(value)) {
@@ -441,6 +441,7 @@ bool client_controller::send_frame(sensor *sensor, uint8_t frame_type)
         builder.write_byte(frame_type);
         builder.write_dword(width);
         builder.write_dword(height);
+        builder.write_dword(etime);
         for (int64_t i = 0; i < size; ++i) {
             builder.write_byte(bytes[i]);
         }
