@@ -109,6 +109,8 @@ void client_controller::register_sensor(sensor *s)
 
 void client_controller::on_start()
 {
+    transport_->set_listener(this);
+
 	// get GPS data via UART
 	gpsuart_ = fopen("/dev/ttyS0", "rt");
 
