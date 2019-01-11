@@ -12,12 +12,12 @@ using namespace cv;
  */
 class webcam_opencv: public webcam
 {
-	VideoCapture cap_;
+	int width_, height_;
 	int deviceNum_;
 	Mat frame_;
     std::vector<uint8_t> frame_buffer_;
 public:
-	webcam_opencv(VideoCapture &vc, int deviceNum): cap_(vc), deviceNum_(deviceNum)
+	webcam_opencv(int width, int height, int deviceNum): width_(width), height_(height), deviceNum_(deviceNum)
 	{
 		capture_frame();
 	}
@@ -27,11 +27,11 @@ public:
 	}
 	virtual int get_width() const
 	{
-		return (int)cap_.get(CAP_PROP_FRAME_WIDTH);
+		return width_;//(int)cap_.get(CAP_PROP_FRAME_WIDTH);
 	}
 	virtual int get_height() const
 	{
-		return (int)cap_.get(CAP_PROP_FRAME_HEIGHT);
+		return height_;//(int)cap_.get(CAP_PROP_FRAME_HEIGHT);
 	}
 	virtual int get_device_id() const override
 	{
@@ -39,10 +39,15 @@ public:
 	}
 	virtual void capture_frame() override
 	{
-		cap_ >> frame_;
-		if (frame_.empty()) {
-			c_printf("{y}warn: {d}end of video stream (device_id=%d)\n", get_device_id());
-		}
+	    VideoCapture cap;
+	    if (cap.open(deviceNum_)) {
+	        cap >> frame_;
+            if (frame_.empty()) {
+                c_printf("{y}warn: {d}end of video stream (device_id=%d)\n", get_device_id());
+            }
+	        cap.release();
+	    }
+		//resize(temp, frame_, Size(temp.cols/2, temp.rows/2));
 	}
 	virtual size_t get_frame_buffer(void **dest) override
 	{
@@ -70,7 +75,9 @@ private:
 		return kError_Webcam;
 	}
 
-	webcam_opencv *webcam = new webcam_opencv(cap, id);
+    int width = (int) cap.get(CAP_PROP_FRAME_WIDTH);
+	int height = (int)cap.get(CAP_PROP_FRAME_WIDTH);
+	webcam_opencv *webcam = new webcam_opencv(width, height, id);
 
 	*cam = webcam;
 	return kError_None;
