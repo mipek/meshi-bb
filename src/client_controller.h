@@ -14,7 +14,7 @@ class sensor;
 
 struct ClientControllerOptions
 {
-	ClientControllerOptions(): port(0), bbid(0), dbgsensors(false), dbgroutes(false)
+	ClientControllerOptions(): port(0), bbid(0), dbgsensors(false), dbgroutes(false), nocameras(false)
 	{
 	}
 	std::string host;
@@ -22,6 +22,7 @@ struct ClientControllerOptions
 	uint16_t bbid;
 	bool dbgsensors;
 	bool dbgroutes;
+	bool nocameras;
 };
 
 class client_controller: public controller, public message_listener, public transport_listener
@@ -73,7 +74,7 @@ private:
 	void on_message_framereq(const uint8_t *payload);
 
 private:
-	int find_and_add_sensors();
+	int find_and_add_sensors(bool nocameras);
 	void update_gps();
 	void report_error(int errorid);
 	bool send_frame(int sensorid);

@@ -18,7 +18,7 @@ extern "C" int main(int argc, char *argv[])
 
 	ClientControllerOptions ccopts;
 	int opt;
-	while ((opt = getopt (argc, argv, "hs:p:i:dr")) != -1)
+	while ((opt = getopt (argc, argv, "hs:p:i:drc")) != -1)
 	{
 		switch (opt)
 		{
@@ -39,6 +39,10 @@ extern "C" int main(int argc, char *argv[])
 			break;
 		case 'r':
 			ccopts.dbgroutes = true;
+			break;
+		case 'c':
+			ccopts.nocameras = true;
+			c_printf("{y}warn: {d}disabling cameras\n");
 			break;
 		}
 	}

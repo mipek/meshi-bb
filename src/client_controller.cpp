@@ -144,6 +144,10 @@ void client_controller::on_tick()
 		// TODO: this is for debugging only, send measurements every now and then
 		on_reach_destination(latlng(lat_, lng_));
 
+		for (size_t i = 0; i < sensors_.size(); ++i) {
+			get_sensor(i)->update();
+		}
+
 		last_tick_ = now;
 	} else {
 		sleep_ms(50);
@@ -309,7 +313,7 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 			trans->on_start(latlng(p1[0], p1[1]));
 		}
 
-		int foundSenorCount = controller->find_and_add_sensors();
+		int foundSenorCount = controller->find_and_add_sensors(opts.nocameras);
 		c_printf("{g}info: {d}found {y}%d {d}sensors\n", foundSenorCount);
 
 		controller->bbid_ = opts.bbid;
@@ -327,17 +331,20 @@ static bool check_i2c_availability(int bus)
 	return false;
 }
 
-int client_controller::find_and_add_sensors()
+int client_controller::find_and_add_sensors(bool no_cameras)
 {
 	sensor *sensor;
 
 	int count = 0;
 
-	// try USB thermal camera first
-	if (sensor_thermal::create_sensor(&sensor) == kError_None)
+	if (!no_cameras)
 	{
-		register_sensor(sensor);
-		++count;
+		// try USB thermal camera first
+		if (sensor_thermal::create_sensor(&sensor) == kError_None)
+		{
+			register_sensor(sensor);
+			++count;
+		}
 	}
 
 	const int i2c_bus = 1;
