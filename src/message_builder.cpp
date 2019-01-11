@@ -78,6 +78,11 @@ void message_builder::write_double(double val)
 	byte_.push_back(p[7]);
 }
 
+size_t message_builder::get_payload_size() const
+{
+	return byte_.size() - payload_offset_;
+}
+
 void message_builder::finalize_message(message &out)
 {
 	out.data = new uint8_t[byte_.size()];

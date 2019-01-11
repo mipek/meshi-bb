@@ -3,10 +3,16 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctype.h>
-#include "transmission_debug.h"	
+#include <time.h>
+#include "transmission_debug.h"
+#include "message_builder.h"
 #include "plat_compat.h"
 #include "cprintf.h"
 #include "crc32.h"
+
+#ifndef min_value
+#define min_value(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
 
 #if PLAT == PLAT_WINDOWS
 #	pragma comment(lib, "Ws2_32.lib")
@@ -86,12 +92,50 @@ size_t transmission_debug::receive(void *data, size_t len)
 	return receive_internal(data, len, true);
 }
 
-size_t transmission_debug::send_message(message const& msg)
+size_t transmission_debug::send_message_internal(message const& msg, bool skip_fragment)
 {
+	static const int MAX_PAYLOAD_SIZE = 800;
+
+	if (!skip_fragment && msg.get_flags() & (uint8_t)packet_flags::fragmented) {
+		float lat = msg.get_latitude();
+		float lng = msg.get_longitude();
+
+		int64_t total_size_left = (int64_t)msg.get_c2s_payload_size();
+
+		uint8_t *payload = msg.get_payload();
+		uint16_t seq_num = 0;
+		uint16_t seq_total = total_size_left / MAX_PAYLOAD_SIZE + 1;
+		c_printf("{m}debug: {d}send image total_sequence_count=%d\n", seq_total);
+		size_t bytes_send = 0;
+		while (total_size_left > 0) {
+			message_builder builder;
+			builder.begin_message(packet_id::c2s_frame,
+								  (packet_flags)msg.get_flags(), msg.get_packet_number(),
+								  bbid_, (uint32_t) time(NULL), position(lat, lng));
+
+			builder.write_short(seq_num++);
+			builder.write_short(seq_total);
+
+			int chunk_size = min_value((int) total_size_left, MAX_PAYLOAD_SIZE);
+			for (int i = 0; i < chunk_size; ++i) {
+				builder.write_byte(*payload);
+				payload++;
+			}
+			total_size_left	-= MAX_PAYLOAD_SIZE;
+
+			message msg;
+			builder.finalize_message(msg);
+			bytes_send += send_message_internal(msg, true);
+		}
+		// TODO: send reliable message that tells the server we are done transmitting
+		return bytes_send;
+
+	}
+
 	size_t bytes = send(msg.data, msg.len);
 	if (bytes < msg.len) {
 		c_printf("{y}warn: {d}server didn't receive all data (%d/%d bytes), skipping %s\n",
-			bytes, msg.len, __FUNCTION__);
+				 bytes, msg.len, __FUNCTION__);
 		return bytes;
 	}
 
@@ -110,6 +154,10 @@ size_t transmission_debug::send_message(message const& msg)
 		waiting_for_ack.push_back(wait);
 	}
 	return bytes;
+}
+
+size_t transmission_debug::send_message(message const& msg) {
+	return send_message_internal(msg, false);
 }
 
 bool transmission_debug::receive_message(message &msg)
@@ -133,7 +181,7 @@ void transmission_debug::update(message_listener *listener)
 		// is for a reliable message we send in the past.
 		// In every case, we hide this message from our message listener.
 		if (msg.get_flags() & (uint8_t)packet_flags::ack) {
-			if (msg.get_bbid() == bbid_ && false) {
+			if (msg.get_bbid() == bbid_) {
 				std::vector<ack_wait>::size_type ack_msg_index;
 				bool found_ack_msg = false;
 				for (std::vector<ack_wait>::size_type i = 0; i < waiting_for_ack.size(); ++i) {
@@ -143,6 +191,10 @@ void transmission_debug::update(message_listener *listener)
 						wfa_msg.get_bbid() == msg.get_bbid() &&
 						wfa_msg.get_packet_number() == msg.get_packet_number())
 					{
+						if (msg.get_packet_id() == packet_id::c2s_sensors) {
+							c_printf("{m}debug: {d}ignoring c2s_sensors ACK\n");
+							continue;
+						}
 						found_ack_msg = true;
 						ack_msg_index = i;
 
@@ -164,8 +216,8 @@ void transmission_debug::update(message_listener *listener)
 		}
 
 		if (msg.get_bbid() == bbid_) {
-            listener->on_message(msg);
-        }
+	            listener->on_message(msg);
+		}
 	}
 
 	// check if we need to re-send any reliable packets

@@ -76,7 +76,8 @@ private:
 	}
 
     width = (int) cap.get(CAP_PROP_FRAME_WIDTH);
-	height = (int)cap.get(CAP_PROP_FRAME_WIDTH);
+	height = (int)cap.get(CAP_PROP_FRAME_HEIGHT);
+	cap.release();
 	webcam_opencv *webcam = new webcam_opencv(width, height, id);
 
 	*cam = webcam;

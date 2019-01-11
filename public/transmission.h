@@ -50,12 +50,27 @@ struct message
 
 	uint8_t *get_payload() const
 	{
-		return (data + packet_c2s_header_size);
+		return (data + 20);
 	}
 
 	uint8_t *get_s2c_payload() const
 	{
 		return (data + packet_s2c_header_size);
+	}
+
+	float get_latitude() const
+	{
+		return *(float*)(data + 12);
+	}
+
+	float get_longitude() const
+	{
+		return *(float*)(data + 16);
+	}
+
+	size_t get_c2s_payload_size() const
+	{
+		return len - (packet_c2s_header_size + 1);
 	}
 
 	uint8_t *data;

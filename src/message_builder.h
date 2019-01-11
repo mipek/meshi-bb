@@ -27,8 +27,10 @@ public: /* payload */
 	void write_float(float val);
 	void write_double(double val);
 
+	size_t get_payload_size() const;
+
 public:
 	void finalize_message(message &out);
 };
 
-#endif //_include_messagebuilder_h_
+#endif //_include_messagebuilder_h_ff

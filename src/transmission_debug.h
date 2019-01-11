@@ -25,6 +25,14 @@ struct ack_wait
 	uint64_t send_time;
 };
 
+struct fragmented_packet
+{
+	fragmented_packet(message *m): msg(m)
+	{
+	}
+	message *msg;
+};
+
 class transmission_debug: public transmission
 {
 	int sockfd_;
@@ -48,6 +56,7 @@ public:
 	size_t receive(void *data, size_t len);
 
 	virtual size_t send_message(message const& msg);
+	size_t send_message_internal(message const& msg, bool fragment_handled=false);
 	bool receive_message(message &msg);
 
 	void update(message_listener *listener);

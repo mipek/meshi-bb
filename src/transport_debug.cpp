@@ -64,8 +64,10 @@ void transport_debug::on_reach_destination() {
 			get_listener()->on_reach_destination(startpos_);
 		}
 	} else {
-		c_printf("{y}warn: {d}reached last destination, we are now vacant\n");
+		c_printf("{y}warn: {d}reached last destination, restarting\n");
 		dest_time_ = 0;
+		get_route()->reset();
+		on_start(destpos_);
 	}
 }
 
