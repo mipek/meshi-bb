@@ -41,7 +41,9 @@ public:
 	{
 	    VideoCapture cap;
 	    if (cap.open(deviceNum_)) {
+		//printf("capturing frame... \n");
 	        cap >> frame_;
+		//printf(" done!\n");
             if (frame_.empty()) {
                 c_printf("{y}warn: {d}end of video stream (device_id=%d)\n", get_device_id());
             }

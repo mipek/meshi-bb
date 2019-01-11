@@ -3,6 +3,7 @@
 #include "cprintf.h"
 #include "plat_compat.h"
 #include <cmath>
+#include <stdio.h>
 
 static const float r_earth = 6371000.0f;
 static const float speed_meters = 20;
@@ -23,6 +24,7 @@ static float get_distance(latlng const& a, latlng const& b) {
 }
 
 void transport_debug::on_start(latlng const& startpos) {
+	//printf("%s: startpos= %f, %f\n", __FUNCTION__, startpos.latitude, startpos.longitude);
 	startpos_ = startpos;
 
 	// Kick-off the traveling by simulating a reach-destination-event
@@ -33,11 +35,14 @@ void transport_debug::on_update(latlng const& curpos) {
 	if (dest_time_ == 0) {
 		return;
 	}
+
 	if (millis() < route_.get_start_time()) {
 		// Not "allowed" to start yet
+		printf("waiting for start time %d secs\n", (uint32_t)(-route_.get_start_time()-millis()));
 		return;
 	}
 
+	//printf("on_update delta=%d\n", millis()-dest_time_);
 	if (millis() >= dest_time_) {
 		startpos_ = destpos_;
 		on_reach_destination();
@@ -56,9 +61,13 @@ void transport_debug::on_reach_destination() {
 	if (get_next_destination(destpos_)) {
 		float distance = get_distance(startpos_, destpos_);
 		uint64_t travel_duration_secs = (uint64_t)(distance / speed_meters);
+		if (distance < 1.0f) {
+			printf("debug: distance(%f) was < 1 - set travel duration to 0m\n", distance);
+			travel_duration_secs = 0;
+		}
 		dest_time_ = millis() + travel_duration_secs*1000;
 		route_.advance();
-		c_printf("{g}info: {d}reached destination, next dest reached in {m}%d {d}seconds (%.2f meters)\n", travel_duration_secs, distance);
+		c_printf("{g}info: {d}reached destination, next dest reached in {m}%d {d}seconds (%.2f meters)\n", (uint32_t)travel_duration_secs, distance);
 
 		if (get_listener()) {
 			get_listener()->on_reach_destination(startpos_);

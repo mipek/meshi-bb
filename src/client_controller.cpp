@@ -142,7 +142,7 @@ void client_controller::on_tick()
 		transport_->on_update(latlng(lat_, lng_));
 
 		// TODO: this is for debugging only, send measurements every now and then
-		on_reach_destination(latlng(lat_, lng_));
+		//on_reach_destination(latlng(lat_, lng_));
 
 		for (size_t i = 0; i < sensors_.size(); ++i) {
 			get_sensor(i)->update();
@@ -183,7 +183,7 @@ void client_controller::on_reach_destination(latlng const& pos)
 
 		sensor_value value;
 		sensor->get_value(value);
-		
+
 		switch (sensor->classify())
 		{
 		case sensor_types::temperature:
@@ -238,6 +238,7 @@ void client_controller::on_message_routes(const uint8_t *payload)
 		} else {
 			route->set_start_time(((uint64_t) stime)*1000);
 		}
+		printf("received route star time: %d\n", stime);
 		route->clear_destinations();
 		for (uint8_t i = 0; i < rcount; ++i) {
 			float lat = *(float*)payload;
@@ -246,7 +247,7 @@ void client_controller::on_message_routes(const uint8_t *payload)
 			payload += sizeof(float);
 			float alt = *(float*)payload;
 			payload += sizeof(float);
-
+			printf(" route[%d] = %f, %f, %f\n", i, lat, lng, alt);
 			route->add_destination(lat, lng);
 		}
 
