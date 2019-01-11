@@ -10,8 +10,8 @@ static int interpret_as_int24(uint8_t *p)
 
 bool MAX30105::check_connection()
 {
-	uint8_t tmp;
-	return bus_.is_valid() && (bus_.read_bytes(&tmp, sizeof(uint8_t)) >= 1);
+	uint8_t tmp = 0xFF;
+	return bus_.is_valid() && (bus_.read_bytes(&tmp, sizeof(uint8_t)) >= 1) && tmp != 0xFF;
 }
 
 void MAX30105::setup(
@@ -23,11 +23,11 @@ void MAX30105::setup(
 
 	set_led_pulse_width(pulse_width);
 	set_led_mode(mode, led_amplitude);
-	
+
 	set_sample_rate(sps);
 
 	set_adc_range(adc);
-	
+
 	set_fifo_averaging(avg);
 	set_fifo_rollover(fifo_rollover_enable);
 
@@ -35,10 +35,10 @@ void MAX30105::setup(
 	clear_fifo();
 }
 
-void MAX30105::reset()
+bool MAX30105::reset()
 {
 	bit_mask(0x09, 0xBF, 0x40);
-	wait_for_clear(0x09, 0x40);
+	return wait_for_clear(0x09, 0x40);
 }
 
 void MAX30105::bit_mask(uint8_t reg, uint8_t mask, uint8_t val)
@@ -64,7 +64,7 @@ bool MAX30105::wait_for_clear(uint8_t reg, uint8_t check)
 void MAX30105::set_led_mode(led_mode mode, uint8_t amplitude)
 {
 	bit_mask(0x09, 0b11111000, (uint8_t)mode);
-	
+
 	mode_ = mode;
 	switch (mode) {
 	case led_mode::red_green_ir:

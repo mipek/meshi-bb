@@ -73,7 +73,7 @@ public:
 	void setup(adc_range adc = adc_range::adc4096, bool fifo_rollover_enable = true,
 		sample_averaging avg = sample_averaging::avg1, sample_rate sps = sample_rate::sps50,
 		led_mode mode = led_mode::red_green_ir, uint8_t led_amplitude = 0x1F, led_pulse_width pulse_width = led_pulse_width::pw69);
-	void reset();
+	bool reset();
 
 public:
 	void set_fifo_averaging(sample_averaging avg);
