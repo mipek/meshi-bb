@@ -75,8 +75,8 @@ private:
 		return kError_Webcam;
 	}
 
-    int width = (int) cap.get(CAP_PROP_FRAME_WIDTH);
-	int height = (int)cap.get(CAP_PROP_FRAME_WIDTH);
+    width = (int) cap.get(CAP_PROP_FRAME_WIDTH);
+	height = (int)cap.get(CAP_PROP_FRAME_WIDTH);
 	webcam_opencv *webcam = new webcam_opencv(width, height, id);
 
 	*cam = webcam;
