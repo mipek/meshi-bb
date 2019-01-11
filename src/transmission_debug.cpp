@@ -174,6 +174,7 @@ void transmission_debug::update(message_listener *listener)
 
 	// receiving data
 	while (receive_message(msg)) {
+		bool dont_print_warning = false;
 		// TODO: verify checksum
 		// msg.get_checksum() == crc32...
 
@@ -192,7 +193,8 @@ void transmission_debug::update(message_listener *listener)
 						wfa_msg.get_packet_number() == msg.get_packet_number())
 					{
 						if (msg.get_packet_id() == packet_id::c2s_sensors) {
-							c_printf("{m}debug: {d}ignoring c2s_sensors ACK\n");
+							c_printf("{m}debug: {d}ignoring c2s_sensors acknowledge\n");
+							dont_print_warning = true;
 							continue;
 						}
 						found_ack_msg = true;
@@ -207,7 +209,9 @@ void transmission_debug::update(message_listener *listener)
 				if (found_ack_msg) {
 					waiting_for_ack.erase(waiting_for_ack.begin() + ack_msg_index);
 				} else {
-					c_printf("{r}error: {d}received ACK message but couldn't find matching reliable message\n");
+					if (!dont_print_warning) {
+						c_printf("{r}error: {d}received ACK message but couldn't find matching reliable message\n");
+					}
 				}
 			}
 
