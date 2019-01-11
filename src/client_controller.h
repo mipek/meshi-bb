@@ -77,8 +77,8 @@ private:
 	int find_and_add_sensors(bool nocameras);
 	void update_gps();
 	void report_error(int errorid);
-	bool send_frame(int sensorid);
-	bool send_frame(sensor *sensor, uint8_t frame_type);
+	bool send_frame(int sensorid, uint32_t etime=0);
+	bool send_frame(sensor *sensor, uint8_t frame_type, uint32_t etime=0);
 };
 
 #endif //_include_client_controller_
