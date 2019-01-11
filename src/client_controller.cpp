@@ -236,7 +236,7 @@ void client_controller::on_message_routes(const uint8_t *payload)
 			// TODO: temporary hotfix
 			route->set_start_time(millis());
 		} else {
-			route->set_start_time(((uint64_t) stime) / 1000);
+			route->set_start_time(((uint64_t) stime)*1000);
 		}
 		route->clear_destinations();
 		for (uint8_t i = 0; i < rcount; ++i) {
