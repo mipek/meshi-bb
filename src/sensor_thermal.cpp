@@ -10,6 +10,11 @@ bool sensor_thermal::get_value(sensor_value &value)
 	return true;
 }
 
+bool sensor_thermal::check_value()
+{
+	return webcam_->is_frame_event();
+}
+
 void sensor_thermal::update()
 {
 	webcam_->capture_frame();

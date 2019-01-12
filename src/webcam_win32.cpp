@@ -50,6 +50,10 @@ public:
 		*dest = params_.mTargetBuf;
 		return get_width() * get_height() * sizeof(int);
 	}
+	bool is_frame_event() override
+	{
+		return false;
+	}
 
 public: /* implementation details */
 	SimpleCapParams *get_impl()

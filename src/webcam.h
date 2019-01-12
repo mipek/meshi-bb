@@ -12,6 +12,7 @@ public:
 	virtual int get_device_id() const = 0;
 	virtual void capture_frame() = 0;
 	virtual size_t get_frame_buffer(void **dest) = 0;
+	virtual bool is_frame_event() = 0;
 };
 
 Error create_webcam(webcam **cam, int id, int width, int height);

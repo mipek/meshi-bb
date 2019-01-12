@@ -40,9 +40,9 @@ public:
 		value.values_[0].iValue = 42;//rand();
 		return true;
 	}
-	virtual bool check_value(sensor_value const& value)
+	virtual bool check_value()
 	{
-		return value.get_value_count() > 0;;
+		return false;
 	}
 };
 
@@ -78,9 +78,9 @@ public:
 		}
 		return false;
 	}
-	virtual bool check_value(sensor_value const& value)
+	virtual bool check_value()
 	{
-		return value.get_value_count() >= 3;
+		return false;
 	}
 public:
 	bool check_connection()
@@ -172,11 +172,19 @@ void client_controller::on_message(message const& msg)
 void client_controller::on_reach_destination(latlng const& pos)
 {
 	// prepare measurement packet
+	uint32_t curtime = (uint32_t)time(NULL);
 	message_builder builder;
 	builder.begin_message(packet_id::c2s_measurement, packet_flags::none,
-		bbid_, (uint32_t)time(NULL), position(pos.latitude, pos.longitude));
+		bbid_, curtime, position(pos.latitude, pos.longitude));
 
-	builder.write_byte(0); // EventID
+	uint8_t event_id = 0;
+	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
+		if (sensors_[i]->check_value()) {
+			event_id = 1;
+		}
+	}
+
+	builder.write_byte(event_id); // EventID
 	builder.write_byte((uint8_t)get_real_sensor_count());
 
 	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
@@ -214,6 +222,13 @@ void client_controller::on_reach_destination(latlng const& pos)
 	message msg;
 	builder.finalize_message(msg);
 	trnsmsn_->send_message(msg);
+
+	// automatically send image frame when we detect a event
+	if (event_id != 0) {
+		if (!send_frame(2, curtime)) { // Thermal
+			send_frame(4, curtime); // RGB
+		}
+	}
 }
 
 void client_controller::on_message_events(const uint8_t *payload)

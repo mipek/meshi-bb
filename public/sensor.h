@@ -52,7 +52,7 @@ public:
 	virtual sensor_types classify() const = 0;
 	virtual const char *name() const = 0;
 	virtual bool get_value(sensor_value &value) =0;
-	virtual bool check_value(sensor_value const& value) =0;
+	virtual bool check_value() =0;
 	virtual void update() {}
 };
 
