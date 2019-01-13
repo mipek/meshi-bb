@@ -178,6 +178,7 @@ void client_controller::on_reach_destination(latlng const& pos)
 	builder.write_byte(event_id); // EventID
 	builder.write_byte((uint8_t)get_real_sensor_count());
 
+	c_printf("{m}debug: {d}sending measurement (%d sensors in packet)\n", get_real_sensor_count());
 	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
 		sensor *sensor = sensors_[i];
 		sensor->update();
@@ -207,6 +208,7 @@ void client_controller::on_reach_destination(latlng const& pos)
 		default:
 			break;
 		}
+		c_printf("{m}debug: {d}sensor %d - %s\n", i, sensor->name());
 	}
 
 	// send measurement packet
