@@ -42,7 +42,11 @@ public:
 	    VideoCapture cap;
 	    if (cap.open(deviceNum_)) {
 		//printf(" %d capturing frame... \n", get_device_id());
-	        cap >> frame_;
+			try {
+				cap >> frame_;
+			} catch(Exception e) {
+				c_printf("{e}error: caught exception in frame cap\n");
+			}
 		//printf(" done!\n");
             if (frame_.empty()) {
                 c_printf("{y}warn: {d}end of video stream (device_id=%d)\n", get_device_id());
