@@ -81,6 +81,10 @@ public:
 	}
 	virtual bool check_value()
 	{
+		sensor_value v;
+		if (get_value(v) && v.vcount_ == 4) {
+			return v.values_[0].iValue > 18000 && v.values_[1].iValue > 25000 && v.values_[2].iValue > 1000;
+		}
 		return false;
 	}
 public:
@@ -174,7 +178,9 @@ void client_controller::on_reach_destination(latlng const& pos)
 	uint8_t event_id = 0;
 	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
 		if (sensors_[i]->check_value()) {
+			c_printf("{r}ATTENTION! ENVIRONMENT EVENT WAS DETECTED");
 			event_id = 1;
+			break;
 		}
 	}
 
