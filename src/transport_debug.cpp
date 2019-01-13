@@ -24,7 +24,6 @@ static float get_distance(latlng const& a, latlng const& b) {
 }
 
 void transport_debug::on_start(latlng const& startpos) {
-	//printf("%s: startpos= %f, %f\n", __FUNCTION__, startpos.latitude, startpos.longitude);
 	startpos_ = startpos;
 
 	// Kick-off the traveling by simulating a reach-destination-event

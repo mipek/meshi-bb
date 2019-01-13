@@ -7,6 +7,7 @@
 #include "cprintf.h"
 #include "sensor_temp.h"
 #include "sensor_thermal.h"
+#include "sensor_camera.h"
 #include "drivers/MAX30105.h"
 #include "plat_compat.h"
 #include "minmea/minmea.h"
@@ -352,6 +353,12 @@ int client_controller::find_and_add_sensors(bool no_cameras)
 			register_sensor(sensor);
 			++count;
 		}
+		// real webcam
+        if (sensor_camera::create_sensor(&sensor) == kError_None)
+        {
+            register_sensor(sensor);
+            ++count;
+        }
 	}
 
 	const int i2c_bus = 1;
@@ -470,10 +477,12 @@ void client_controller::announce_sensors()
 						  bbid_, (uint32_t)time(NULL), position(lat_, lng_));
 
 	builder.write_byte((uint8_t)sensors_.size());
+	c_printf("{m}debug: {d}sensor count: %d\n", sensors_.size());
 	for (size_t i = 0; i < sensors_.size(); ++i) {
 		sensor *sensor = get_sensor(i);
 		builder.write_byte((uint8_t)sensor->id());
 		builder.write_byte((uint8_t)sensor->classify());
+		c_printf("{m}debug: {d}sensor: %s\n", sensor->name());
 	}
 
 	message msg;
