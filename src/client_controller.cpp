@@ -437,12 +437,16 @@ bool client_controller::send_frame(int sensorid, uint32_t etime)
 {
 	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
 		sensor *sensor = sensors_[i];
-		uint8_t frame_type = sensor_type_to_frame_type(sensor->classify());
-		if (frame_type != 0xff) {
-			return send_frame(sensor, frame_type, etime);
-		} else {
-		    c_printf("{r}error: specified sensor with id=%d is not a camera/thermal sensor (name: %s, classify: %d)\n", sensorid, sensor->name(), sensor->classify());
-		}
+		if (sensor->id() == sensorid) {
+            uint8_t frame_type = sensor_type_to_frame_type(sensor->classify());
+            if (frame_type != 0xff) {
+                return send_frame(sensor, frame_type, etime);
+            } else {
+                c_printf(
+                        "{r}error: specified sensor with id=%d is not a camera/thermal sensor (name: %s, classify: %d)\n",
+                        sensorid, sensor->name(), sensor->classify());
+            }
+        }
 	}
 	return false;
 }
