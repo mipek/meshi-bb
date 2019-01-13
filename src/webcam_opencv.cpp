@@ -59,6 +59,9 @@ public:
 			return 0;
 		}
         // encode a new one
+		std::vector<int> comp_params;
+		comp_params.push_back(IMWRITE_JPEG_QUALITY);
+		comp_params.push_back(60);
         if (imencode(".jpg", frame_, frame_buffer_)) {
             *dest = (void *) &frame_buffer_[0];
             return frame_buffer_.size();
