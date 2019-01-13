@@ -23,7 +23,7 @@ void sensor_thermal::update()
 Error sensor_thermal::create_sensor(sensor **sensor)
 {
 	webcam *cam;
-	Error err = create_webcam(&cam, 1, 140, 120);
+	Error err = create_webcam(&cam, 0, 140, 120);
 	if (err != kError_None)
 	{
 		return err;

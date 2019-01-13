@@ -41,7 +41,7 @@ public:
 	{
 	    VideoCapture cap;
 	    if (cap.open(deviceNum_)) {
-		//printf("capturing frame... \n");
+		//printf(" %d capturing frame... \n", get_device_id());
 	        cap >> frame_;
 		//printf(" done!\n");
             if (frame_.empty()) {
@@ -54,11 +54,11 @@ public:
 	virtual size_t get_frame_buffer(void **dest) override
 	{
         // free old framebuffer (if any)
-        //destroy_buffer();
-		if (frame_buffer_.empty()) {
-			return 0;
-		}
+        //destroy_buffer()
         // encode a new one
+		std::vector<int> comp_params;
+		comp_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+		comp_params.push_back(9);
         if (imencode(".jpg", frame_, frame_buffer_)) {
             *dest = (void *) &frame_buffer_[0];
             return frame_buffer_.size();
