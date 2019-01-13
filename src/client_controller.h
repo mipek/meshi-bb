@@ -79,6 +79,7 @@ private:
 	void report_error(int errorid);
 	bool send_frame(int sensorid, uint32_t etime=0);
 	bool send_frame(sensor *sensor, uint8_t frame_type, uint32_t etime=0);
+    void announce_sensors();
 };
 
 #endif //_include_client_controller_

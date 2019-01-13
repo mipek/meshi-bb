@@ -12,6 +12,7 @@ static const int packet_reliable_timeout = 800; // after how many millis a relia
 
 enum class packet_id
 {
+	s2c_sensorreq = 1,
 	c2s_sensors = 1,
 	s2c_events = 2,
 	s2c_routes = 3,

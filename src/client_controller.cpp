@@ -115,20 +115,7 @@ void client_controller::on_start()
 	gpsuart_ = fopen("/dev/ttyS0", "rt");
 
 	// announce what kind of sensors we've got
-	message_builder builder;
-	builder.begin_message(packet_id::c2s_sensors, packet_flags::reliable,
-		bbid_, (uint32_t)time(NULL), position(lat_, lng_));
-
-	builder.write_byte((uint8_t)sensors_.size());
-	for (size_t i = 0; i < sensors_.size(); ++i) {
-		sensor *sensor = get_sensor(i);
-		builder.write_byte((uint8_t)sensor->id());
-		builder.write_byte((uint8_t)sensor->classify());
-	}
-
-	message msg;
-	builder.finalize_message(msg);
-	trnsmsn_->send_message(msg);
+	announce_sensors();
 }
 
 void client_controller::on_tick()
@@ -160,6 +147,9 @@ void client_controller::on_message(message const& msg)
 {
 	const uint8_t *payload = msg.get_s2c_payload();
 	switch (msg.get_packet_id()) {
+    case packet_id::s2c_sensorreq:
+		announce_sensors();
+        break;
 	case packet_id::s2c_routes:
 		on_message_routes(payload);
 		break;
@@ -471,4 +461,22 @@ bool client_controller::send_frame(sensor *sensor, uint8_t frame_type, uint32_t 
 		return true;
 	}
 	return false;
+}
+
+void client_controller::announce_sensors()
+{
+	message_builder builder;
+	builder.begin_message(packet_id::c2s_sensors, packet_flags::reliable,
+						  bbid_, (uint32_t)time(NULL), position(lat_, lng_));
+
+	builder.write_byte((uint8_t)sensors_.size());
+	for (size_t i = 0; i < sensors_.size(); ++i) {
+		sensor *sensor = get_sensor(i);
+		builder.write_byte((uint8_t)sensor->id());
+		builder.write_byte((uint8_t)sensor->classify());
+	}
+
+	message msg;
+	builder.finalize_message(msg);
+	trnsmsn_->send_message(msg);
 }
