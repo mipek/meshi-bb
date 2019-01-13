@@ -9,12 +9,9 @@ bool sensor_temperature::get_value(sensor_value &value)
 	return true;
 }
 
-bool sensor_temperature::check_value(sensor_value const& value)
+bool sensor_temperature::check_value()
 {
-	if (value.get_value_count() != 1) return false;
-
-	int temp = value.get_value(1).iValue;
-	return temp > -60 && temp < 60; // If we ever hit those temperatures we have another problem..
+	return false;
 }
 
 Error sensor_temperature::create_sensor(sensor_temperature **sensor)

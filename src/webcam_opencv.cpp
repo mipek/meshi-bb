@@ -62,6 +62,11 @@ public:
         }
         return 0;
 	}
+
+	bool is_frame_event() override
+	{
+		return false;
+	}
 private:
 	void destroy_buffer()
 	{

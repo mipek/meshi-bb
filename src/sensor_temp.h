@@ -7,8 +7,9 @@
 class sensor_temperature : public sensor
 {
 	int id_;
-	sensor_temperature(int id) : id_(id)
+	sensor_temperature(int id) 
 	{
+		id_ = id;		
 	}
 public:
 	virtual int id() const
@@ -24,7 +25,7 @@ public:
 		return "DS";
 	}
 	virtual bool get_value(sensor_value &value);
-	virtual bool check_value(sensor_value const& value);
+	virtual bool check_value();
 	static Error create_sensor(sensor_temperature **sensor);
 };
 
