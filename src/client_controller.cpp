@@ -500,7 +500,7 @@ void client_controller::announce_sensors()
 		sensor *sensor = get_sensor(i);
 		builder.write_byte((uint8_t)sensor->id());
 		builder.write_byte((uint8_t)sensor->classify());
-		c_printf("{m}debug: {d}sensor: %s (announce)\n", sensor->name());
+		c_printf("{m}debug: {d}sensor: %s id=%d (announce)\n", sensor->name(), sensor->id());
 	}
 
 	message msg;
