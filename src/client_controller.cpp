@@ -113,7 +113,8 @@ void client_controller::on_start()
     transport_->set_listener(this);
 
 	// get GPS data via UART
-	gpsuart_ = fopen("/dev/ttyS0", "rt");
+	// TODO: disabled
+	//gpsuart_ = fopen("/dev/ttyS0", "rt");
 
 	// announce what kind of sensors we've got
 	announce_sensors();
@@ -167,6 +168,8 @@ void client_controller::on_reach_destination(latlng const& pos)
 	message_builder builder;
 	builder.begin_message(packet_id::c2s_measurement, packet_flags::none,
 		bbid_, curtime, position(pos.latitude, pos.longitude));
+	lat_ = pos.latitude;
+	lng_ = pos.longitude;
 
 	uint8_t event_id = 0;
 	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
@@ -438,7 +441,7 @@ bool client_controller::send_frame(int sensorid, uint32_t etime)
 		if (frame_type != 0xff) {
 			return send_frame(sensor, frame_type, etime);
 		} else {
-		    c_printf("{r}error: specified sensor with id=%d is not a camera/thermal sensor\n", sensorid);
+		    c_printf("{r}error: specified sensor with id=%d is not a camera/thermal sensor (name: %s, classify: %d)\n", sensorid, sensor->name(), sensor->classify());
 		}
 	}
 	return false;

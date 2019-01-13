@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 static const float r_earth = 6371000.0f;
-static const float speed_meters = 20;
+static const float speed_meters = 100;
 
 static double to_rad(double deg) {
 	return deg / 180.0f * M_PI;
