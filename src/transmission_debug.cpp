@@ -94,7 +94,7 @@ size_t transmission_debug::receive(void *data, size_t len)
 
 size_t transmission_debug::send_message_internal(message const& msg, bool skip_fragment)
 {
-	static const int MAX_PAYLOAD_SIZE = 800;
+	static const int MAX_PAYLOAD_SIZE = 1000;
 
 	if (!skip_fragment && msg.get_flags() & (uint8_t)packet_flags::fragmented) {
 		float lat = msg.get_latitude();
