@@ -29,6 +29,6 @@ Error sensor_camera::create_sensor(sensor **sensor)
 		return err;
 	}
 
-	*sensor = new sensor_thermal(4, cam);
+	*sensor = new sensor_camera(4, cam);
 	return kError_None;
 }
