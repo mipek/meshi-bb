@@ -208,7 +208,7 @@ void client_controller::on_reach_destination(latlng const& pos)
 		default:
 			break;
 		}
-		c_printf("{m}debug: {d}sensor %d - %s\n", i, sensor->name());
+		c_printf("{m}debug: {d}sensor %d - %s (sensorid = %d)\n", i, sensor->name(), sensor->id());
 	}
 
 	// send measurement packet
@@ -437,6 +437,8 @@ bool client_controller::send_frame(int sensorid, uint32_t etime)
 		uint8_t frame_type = sensor_type_to_frame_type(sensor->classify());
 		if (frame_type != 0xff) {
 			return send_frame(sensor, frame_type, etime);
+		} else {
+		    c_printf("{r}error: specified sensor with id=%d is not a camera/thermal sensor\n", sensorid);
 		}
 	}
 	return false;
@@ -452,22 +454,29 @@ bool client_controller::send_frame(sensor *sensor, uint8_t frame_type, uint32_t 
 
 		uint8_t *bytes;
 		int64_t size = (int64_t)wc->get_frame_buffer((void**)&bytes);
-        message_builder builder;
-        builder.begin_message(packet_id::c2s_frame, packet_flags::fragmented,
-                              bbid_, (uint32_t) time(NULL), position(lat_, lng_));
-        builder.write_byte(frame_type);
-        builder.write_dword(width);
-        builder.write_dword(height);
-        builder.write_dword(etime);
-        for (int64_t i = 0; i < size; ++i) {
-            builder.write_byte(bytes[i]);
-        }
+		if (size > 0) {
+            message_builder builder;
+            builder.begin_message(packet_id::c2s_frame, packet_flags::fragmented,
+                                  bbid_, (uint32_t) time(NULL), position(lat_, lng_));
+            builder.write_byte(frame_type);
+            builder.write_dword(width);
+            builder.write_dword(height);
+            builder.write_dword(etime);
+            for (int64_t i = 0; i < size; ++i) {
+                builder.write_byte(bytes[i]);
+            }
 
-        message msg;
-        builder.finalize_message(msg);
-        trnsmsn_->send_message(msg);
+            message msg;
+            builder.finalize_message(msg);
+            trnsmsn_->send_message(msg);
 
-		return true;
+            c_printf("{m}debug: {d}sending frame (%d bytes)\n", size);
+            return true;
+        } else {
+		    c_printf("{r}error: {d}couldn't get frame buffer from %s\n", sensor->name());
+		}
+	} else {
+	    c_printf("{r}error: {d}failed to access sensor values (%s)\n", sensor->name());
 	}
 	return false;
 }
@@ -479,12 +488,12 @@ void client_controller::announce_sensors()
 						  bbid_, (uint32_t)time(NULL), position(lat_, lng_));
 
 	builder.write_byte((uint8_t)sensors_.size());
-	c_printf("{m}debug: {d}sensor count: %d\n", sensors_.size());
+	c_printf("{m}debug: {d}sensor count: %d (announce)\n", sensors_.size());
 	for (size_t i = 0; i < sensors_.size(); ++i) {
 		sensor *sensor = get_sensor(i);
 		builder.write_byte((uint8_t)sensor->id());
 		builder.write_byte((uint8_t)sensor->classify());
-		c_printf("{m}debug: {d}sensor: %s\n", sensor->name());
+		c_printf("{m}debug: {d}sensor: %s (announce)\n", sensor->name());
 	}
 
 	message msg;

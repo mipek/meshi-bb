@@ -54,7 +54,10 @@ public:
 	virtual size_t get_frame_buffer(void **dest) override
 	{
         // free old framebuffer (if any)
-        destroy_buffer();
+        //destroy_buffer();
+		if (frame_buffer_.empty()) {
+			return 0;
+		}
         // encode a new one
         if (imencode(".jpg", frame_, frame_buffer_)) {
             *dest = (void *) &frame_buffer_[0];
