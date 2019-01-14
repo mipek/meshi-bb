@@ -56,12 +56,13 @@ public:
     {
         // encode a new one
         std::vector<int> comp_params;
-        comp_params.push_back(IMWRITE_JPEG_QUALITY);
-        comp_params.push_back(20);
 
         Mat temp = frame_;
         if (get_device_id() != 0) {
+            c_printf("{m}debug: {d}device_id = %d (reducing size)\n", get_device_id());
             resize(frame_, temp, Size(), 0.25, 0.25);
+            comp_params.push_back(IMWRITE_JPEG_QUALITY);
+            comp_params.push_back(20);
         }
         if (temp.empty()) {
             return 0;
