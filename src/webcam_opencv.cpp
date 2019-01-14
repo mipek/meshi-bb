@@ -41,13 +41,11 @@ public:
 	{
 	    VideoCapture cap;
 	    if (cap.open(deviceNum_)) {
-		//printf(" %d capturing frame... \n", get_device_id());
 			try {
 				cap >> frame_;
-			} catch(Exception e) {
+			} catch(cv::Exception e) {
 				c_printf("{e}error: caught exception in frame cap\n");
 			}
-		//printf(" done!\n");
             if (frame_.empty()) {
                 c_printf("{y}warn: {d}end of video stream (device_id=%d)\n", get_device_id());
             }
@@ -57,19 +55,24 @@ public:
 	}
 	virtual size_t get_frame_buffer(void **dest) override
 	{
-        // free old framebuffer (if any)
-        //destroy_buffer()
         // encode a new one
 		std::vector<int> comp_params;
 		comp_params.push_back(IMWRITE_JPEG_QUALITY);
 		comp_params.push_back(50);
-        if (imencode(".jpg", frame_, frame_buffer_)) {
+
+		Mat temp = frame_;
+		if (get_device_id() != 0) {
+		    resize(frame_, temp, Size(), 0.25, 0.25);
+		}
+		if (temp.empty()) {
+		    return 0;
+		}
+        if (imencode(".jpg", temp, frame_buffer_, comp_params)) {
             *dest = (void *) &frame_buffer_[0];
             return frame_buffer_.size();
         }
         return 0;
 	}
-
 	bool is_frame_event() override
 	{
 		return false;
