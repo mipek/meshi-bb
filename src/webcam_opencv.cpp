@@ -63,8 +63,8 @@ public:
         comp_params.push_back(IMWRITE_JPEG_QUALITY);
         if (get_width() > 100 && get_height() > 100) {
 
-            resize(frame_, temp, Size(), 0.25, 0.25);
-            comp_params.push_back(38);
+            resize(frame_, temp, Size(), 0.32, 0.32);
+            comp_params.push_back(42);
         } else {
             comp_params.push_back(95);
         }
