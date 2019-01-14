@@ -75,11 +75,15 @@ void transport_debug::on_reach_destination() {
 		if (get_listener()) {
 			get_listener()->on_reach_destination(startpos_);
 		}
+		did_visit_ = true;
 	} else {
-		c_printf("{y}warn: {d}reached last destination, restarting\n");
 		dest_time_ = 0;
 		get_route()->reset();
-		on_start(destpos_);
+		if (did_visit_) {
+			did_visit_ = false;
+			c_printf("{y}warn: {d}reached last destination, restarting\n");
+			on_start(destpos_);
+		}
 	}
 }
 

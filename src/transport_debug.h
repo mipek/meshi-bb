@@ -9,8 +9,9 @@ class transport_debug: public transport
 	route route_;
 	latlng startpos_, destpos_;
 	uint64_t dest_time_;
+	bool did_visit_;
 public:
-	transport_debug(): callback_(NULL), dest_time_(0)
+	transport_debug(): callback_(NULL), dest_time_(0), did_visit_(true)
 	{
 	}
 	virtual void on_start(latlng const& startpos);
