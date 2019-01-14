@@ -38,7 +38,7 @@ class client_controller: public controller, public message_listener, public tran
 	bool running_;
 public:
 	client_controller(transmission *trnsmsn): gpsuart_(NULL), trnsmsn_(trnsmsn), last_tick_(0), running_(true),
-                                              lat_(52.326471f), lng_(13.707848f), sensor_count_(0)
+                                              lat_(52.319218f), lng_(13.632859f), sensor_count_(0)
 	{
 	}
 	virtual ~client_controller();
