@@ -178,7 +178,7 @@ void client_controller::on_reach_destination(latlng const& pos)
 	uint8_t event_id = 0;
 	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
 		if (sensors_[i]->check_value()) {
-			c_printf("{r}ATTENTION! ENVIRONMENT EVENT WAS DETECTED");
+			c_printf("{r}ATTENTION! ENVIRONMENT EVENT WAS DETECTED\n");
 			event_id = 1;
 			break;
 		}
@@ -253,11 +253,11 @@ void client_controller::on_message_routes(const uint8_t *payload)
 
 		if (stime == 0) {
 			// TODO: temporary hotfix
-			route->set_start_time(millis());
+			route->set_start_time((uint32_t)time(NULL));
 		} else {
-			route->set_start_time(((uint64_t) stime)*1000);
+			route->set_start_time(stime);
 		}
-		printf("received route star time: %d\n", stime);
+		printf("received route star time: %d, currenet: %d\n", stime, time(NULL));
 		route->clear_destinations();
 		for (uint8_t i = 0; i < rcount; ++i) {
 			float lat = *(float*)payload;
@@ -324,7 +324,7 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 			float p2[2] = {52.458865f, 13.506573f}; //270m
 			float p3[2] = {52.452931f, 13.515043f}; //350m
 			route *r = trans->get_route();
-			r->set_start_time(millis() + 1000);
+			r->set_start_time(time(NULL) + 10);
 			r->add_destination(p1[0], p1[1]);
 			r->add_destination(p2[0], p2[1]);
 			r->add_destination(p3[0], p3[1]);

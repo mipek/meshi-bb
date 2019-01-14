@@ -14,7 +14,7 @@ struct latlng
 
 class route
 {
-	uint64_t start_time_;
+	uint32_t start_time_;
 	std::deque<latlng> pos_;
 	std::deque<latlng>::iterator current_;
 	bool repeating_;
@@ -22,7 +22,7 @@ public:
 	route() {
 		current_ = pos_.end();
 	}
-	uint64_t get_start_time() const {
+	uint32_t get_start_time() const {
 		return start_time_;
 	}
 	latlng get_destination() const {
@@ -39,7 +39,7 @@ public:
 	void reset() {
 		current_ = pos_.begin();
 	}
-	void set_start_time(uint64_t time) {
+	void set_start_time(uint32_t time) {
 		start_time_ = time;
 	}
 	void add_destination(float lat, float lng) {
