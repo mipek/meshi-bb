@@ -57,9 +57,10 @@ public:
         // encode a new one
         std::vector<int> comp_params;
 
+        c_printf("{m}debug: {d}%s device_id = %d %dx%d\n", __FUNCTION__, get_device_id(), get_width(), get_height());
         Mat temp = frame_;
-        if (get_device_id() != 0) {
-            c_printf("{m}debug: {d}device_id = %d (reducing size)\n", get_device_id());
+        if (get_width() > 100 && get_height() > 100) {
+
             resize(frame_, temp, Size(), 0.25, 0.25);
             comp_params.push_back(IMWRITE_JPEG_QUALITY);
             comp_params.push_back(20);
