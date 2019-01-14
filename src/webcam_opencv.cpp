@@ -58,12 +58,15 @@ public:
         std::vector<int> comp_params;
 
         c_printf("{m}debug: {d}%s device_id = %d %dx%d\n", __FUNCTION__, get_device_id(), get_width(), get_height());
+
         Mat temp = frame_;
+        comp_params.push_back(IMWRITE_JPEG_QUALITY);
         if (get_width() > 100 && get_height() > 100) {
 
             resize(frame_, temp, Size(), 0.25, 0.25);
-            comp_params.push_back(IMWRITE_JPEG_QUALITY);
-            comp_params.push_back(20);
+            comp_params.push_back(38);
+        } else {
+            comp_params.push_back(95);
         }
         if (temp.empty()) {
             return 0;
