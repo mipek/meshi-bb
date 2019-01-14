@@ -4,6 +4,7 @@
 #include "plat_compat.h"
 #include <cmath>
 #include <stdio.h>
+#include <time.h>
 
 static const float r_earth = 6371000.0f;
 static const float speed_meters = 100;
@@ -23,6 +24,10 @@ static float get_distance(latlng const& a, latlng const& b) {
 	return dist;
 }
 
+static uint32_t secs() {
+	return (uint32_t)time(NULL);
+}
+
 void transport_debug::on_start(latlng const& startpos) {
 	startpos_ = startpos;
 
@@ -35,14 +40,13 @@ void transport_debug::on_update(latlng const& curpos) {
 		return;
 	}
 
-	if (millis() < route_.get_start_time()) {
+	if (secs() < route_.get_start_time()) {
 		// Not "allowed" to start yet
-		printf("waiting for start time %d secs\n", (uint32_t)(-route_.get_start_time()-millis()));
+		printf("waiting for start time %d secs\n", (uint32_t)(route_.get_start_time()-secs()));
 		return;
 	}
 
-	//printf("on_update delta=%d\n", millis()-dest_time_);
-	if (millis() >= dest_time_) {
+	if (secs() >= dest_time_) {
 		startpos_ = destpos_;
 		on_reach_destination();
 	}
@@ -59,12 +63,12 @@ bool transport_debug::get_next_destination(latlng &pos) {
 void transport_debug::on_reach_destination() {
 	if (get_next_destination(destpos_)) {
 		float distance = get_distance(startpos_, destpos_);
-		uint64_t travel_duration_secs = (uint64_t)(distance / speed_meters);
+		uint32_t travel_duration_secs = (uint32_t)(distance / speed_meters);
 		if (distance < 1.0f) {
 			printf("debug: distance(%f) was < 1 - set travel duration to 0m\n", distance);
 			travel_duration_secs = 0;
 		}
-		dest_time_ = millis() + travel_duration_secs*1000;
+		dest_time_ = secs() + travel_duration_secs;
 		route_.advance();
 		c_printf("{g}info: {d}reached destination, next dest reached in {m}%d {d}seconds (%.2f meters)\n", (uint32_t)travel_duration_secs, distance);
 
