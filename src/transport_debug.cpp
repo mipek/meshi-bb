@@ -17,8 +17,8 @@ static float get_distance(latlng const& a, latlng const& b) {
 	double d_lat = to_rad(b.latitude - a.latitude);
 	double d_lng = to_rad(b.longitude - a.longitude);
 	double d_a = sin(d_lat/2) * sin(d_lat/2) +
-              cos(to_rad(a.latitude)) * cos(to_rad(b.latitude)) *
-              sin(d_lng/2) * sin(d_lng/2);
+			  cos(to_rad(a.latitude)) * cos(to_rad(b.latitude)) *
+			  sin(d_lng/2) * sin(d_lng/2);
 	double c = 2 * atan2(sqrt(d_a), sqrt(1-d_a));
 	float dist = (float) (r_earth * c);
 	return dist;

@@ -15,7 +15,7 @@
 #include <ctime>
 
 #ifndef min_value
-#define min_value(a,b)            (((a) < (b)) ? (a) : (b))
+#define min_value(a,b)			(((a) < (b)) ? (a) : (b))
 #endif
 
 /**
@@ -114,7 +114,7 @@ void client_controller::register_sensor(sensor *s)
 
 void client_controller::on_start()
 {
-    transport_->set_listener(this);
+	transport_->set_listener(this);
 
 	// get GPS data via UART
 	// TODO: disabled
@@ -153,9 +153,9 @@ void client_controller::on_message(message const& msg)
 {
 	const uint8_t *payload = msg.get_s2c_payload();
 	switch (msg.get_packet_id()) {
-    case packet_id::s2c_sensorreq:
+	case packet_id::s2c_sensorreq:
 		announce_sensors();
-        break;
+		break;
 	case packet_id::s2c_routes:
 		on_message_routes(payload);
 		break;
@@ -365,11 +365,11 @@ int client_controller::find_and_add_sensors(bool no_cameras)
 			++count;
 		}
 		// real webcam
-        if (sensor_camera::create_sensor(&sensor) == kError_None)
-        {
-            register_sensor(sensor);
-            ++count;
-        }
+		if (sensor_camera::create_sensor(&sensor) == kError_None)
+		{
+			register_sensor(sensor);
+			++count;
+		}
 	}
 
 	const int i2c_bus = 1;
@@ -444,15 +444,15 @@ bool client_controller::send_frame(int sensorid, uint32_t etime)
 	for (std::vector<sensor*>::size_type i = 0; i < sensors_.size(); ++i) {
 		sensor *sensor = sensors_[i];
 		if (sensor->id() == sensorid) {
-            uint8_t frame_type = sensor_type_to_frame_type(sensor->classify());
-            if (frame_type != 0xff) {
-                return send_frame(sensor, frame_type, etime);
-            } else {
-                c_printf(
-                        "{r}error: specified sensor with id=%d is not a camera/thermal sensor (name: %s, classify: %d)\n",
-                        sensorid, sensor->name(), sensor->classify());
-            }
-        }
+			uint8_t frame_type = sensor_type_to_frame_type(sensor->classify());
+			if (frame_type != 0xff) {
+				return send_frame(sensor, frame_type, etime);
+			} else {
+				c_printf(
+						"{r}error: specified sensor with id=%d is not a camera/thermal sensor (name: %s, classify: %d)\n",
+						sensorid, sensor->name(), sensor->classify());
+			}
+		}
 	}
 	return false;
 }
@@ -468,28 +468,28 @@ bool client_controller::send_frame(sensor *sensor, uint8_t frame_type, uint32_t 
 		uint8_t *bytes;
 		int64_t size = (int64_t)wc->get_frame_buffer((void**)&bytes);
 		if (size > 0) {
-            message_builder builder;
-            builder.begin_message(packet_id::c2s_frame, packet_flags::fragmented,
-                                  bbid_, (uint32_t) time(NULL), position(lat_, lng_));
-            builder.write_byte(frame_type);
-            builder.write_dword(width);
-            builder.write_dword(height);
-            builder.write_dword(etime);
-            for (int64_t i = 0; i < size; ++i) {
-                builder.write_byte(bytes[i]);
-            }
+			message_builder builder;
+			builder.begin_message(packet_id::c2s_frame, packet_flags::fragmented,
+								  bbid_, (uint32_t) time(NULL), position(lat_, lng_));
+			builder.write_byte(frame_type);
+			builder.write_dword(width);
+			builder.write_dword(height);
+			builder.write_dword(etime);
+			for (int64_t i = 0; i < size; ++i) {
+				builder.write_byte(bytes[i]);
+			}
 
-            message msg;
-            builder.finalize_message(msg);
-            trnsmsn_->send_message(msg);
+			message msg;
+			builder.finalize_message(msg);
+			trnsmsn_->send_message(msg);
 
-            c_printf("{m}debug: {d}sending frame (%d bytes)\n", size);
-            return true;
-        } else {
-		    c_printf("{r}error: {d}couldn't get frame buffer from %s\n", sensor->name());
+			c_printf("{m}debug: {d}sending frame (%d bytes)\n", size);
+			return true;
+		} else {
+			c_printf("{r}error: {d}couldn't get frame buffer from %s\n", sensor->name());
 		}
 	} else {
-	    c_printf("{r}error: {d}failed to access sensor values (%s)\n", sensor->name());
+		c_printf("{r}error: {d}failed to access sensor values (%s)\n", sensor->name());
 	}
 	return false;
 }

@@ -38,7 +38,7 @@ class client_controller: public controller, public message_listener, public tran
 	bool running_;
 public:
 	client_controller(transmission *trnsmsn): gpsuart_(NULL), trnsmsn_(trnsmsn), last_tick_(0), running_(true),
-                                              lat_(52.319218f), lng_(13.632859f), sensor_count_(0)
+											  lat_(52.319218f), lng_(13.632859f), sensor_count_(0)
 	{
 	}
 	virtual ~client_controller();
@@ -79,7 +79,7 @@ private:
 	void report_error(int errorid);
 	bool send_frame(int sensorid, uint32_t etime=0);
 	bool send_frame(sensor *sensor, uint8_t frame_type, uint32_t etime=0);
-    void announce_sensors();
+	void announce_sensors();
 };
 
 #endif //_include_client_controller_

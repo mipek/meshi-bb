@@ -1,3 +1,9 @@
+/**
+* Meshi-BB
+* @author Michael Pekar
+* @version 1.0
+* @mainpage This is the documentation for the meshi-bb software.
+*/
 #include <stdio.h>
 #include "blackbox.h"
 #include "client_controller.h"

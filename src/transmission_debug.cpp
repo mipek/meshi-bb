@@ -11,7 +11,7 @@
 #include "crc32.h"
 
 #ifndef min_value
-#define min_value(a,b)            (((a) < (b)) ? (a) : (b))
+#define min_value(a,b)			(((a) < (b)) ? (a) : (b))
 #endif
 
 #if PLAT == PLAT_WINDOWS
@@ -212,7 +212,7 @@ void transmission_debug::update(message_listener *listener)
 		}
 
 		if (msg.get_bbid() == bbid_) {
-	            listener->on_message(msg);
+				listener->on_message(msg);
 		}
 	}
 
