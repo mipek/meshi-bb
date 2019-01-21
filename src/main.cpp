@@ -1,6 +1,14 @@
 /**
-* Meshi-BB
+* This is part of a semester project. The project is organized in the 3 parts: blackbox, backend, application.
+* This project is the "blackbox" and it provides a implementation to run measurements at different POIs.
+* @author Lennard Rheinisch
 * @author Michael Pekar
+* @author Mathias Lindt
+* @author Robin Hahn
+* @author Lukas Mechura
+* @author Max Dallüge
+* @author Florian Schütze
+* @author Jan Selchow
 * @version 1.0
 * @mainpage This is the documentation for the meshi-bb software.
 */

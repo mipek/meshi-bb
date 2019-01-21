@@ -252,7 +252,7 @@ void client_controller::on_message_routes(const uint8_t *payload)
 		payload += sizeof(uint32_t);
 
 		if (stime == 0) {
-			// TODO: temporary hotfix
+			// if we receive a faulty time set start time to "now"
 			route->set_start_time((uint32_t)time(NULL));
 		} else {
 			route->set_start_time(stime);
@@ -296,6 +296,7 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 {
 	transmission *trnsmsn;
 	if (!opts.host.empty() && opts.port > 0) {
+		// establish connection
 		c_printf("connecting to %s:%d...\n", opts.host.c_str(), opts.port);
 		Error error = transmission_debug::connect_to_master(
 			opts.host.c_str(), opts.port, opts.bbid, &trnsmsn);
@@ -306,6 +307,7 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 		}
 		c_printf("successfully connected!\n");
 
+		// create client controller and add debug sensors (if neccessary)
 		client_controller *controller = new client_controller(trnsmsn);
 		if (opts.dbgsensors)
 		{
@@ -315,6 +317,7 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 			controller->register_sensor(sensor);
 		}
 
+		// create transport interface
 		transport *trans = new transport_debug();
 		controller->set_transport(trans);
 		float p1[2] = {52.460707f, 13.503987f};
@@ -332,8 +335,9 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 			trans->on_start(latlng(p1[0], p1[1]));
 		}
 
-		int foundSenorCount = controller->find_and_add_sensors(opts.nocameras);
-		c_printf("{g}info: {d}found {y}%d {d}sensors\n", foundSenorCount);
+		// initialize sensors
+		int found_senor_count = controller->find_and_add_sensors(opts.nocameras);
+		c_printf("{g}info: {d}found {y}%d {d}sensors\n", found_senor_count);
 
 		controller->bbid_ = opts.bbid;
 		return controller;
@@ -343,11 +347,11 @@ controller *client_controller::make(ClientControllerOptions const& opts)
 	}
 }
 
+/// Checks whether or not the I2C-Bus at the specified port is accessible.
 static bool check_i2c_availability(int bus)
 {
 	i2c_master i2c(bus);
 	return i2c.is_valid();
-	//return false;
 }
 
 int client_controller::find_and_add_sensors(bool no_cameras)
@@ -395,16 +399,19 @@ void client_controller::update_gps()
 {
 	if (!gpsuart_) return;
 
+	// parse NMEA data from the GPS chip
 	char line[MINMEA_MAX_LENGTH];
 	while (fgets(line, sizeof(line), gpsuart_) != NULL) {
 		switch (minmea_sentence_id(line, false)) {
 			case MINMEA_SENTENCE_RMC: {
 				struct minmea_sentence_rmc frame;
 				if (minmea_parse_rmc(&frame, line)) {
-					printf("$RMC floating point degree coordinates and speed: (%f,%f) %f\n",
+					c_printf("{m}debug: {d}$RMC floating point degree coordinates and speed: (%f,%f) %f\n",
 							minmea_tocoord(&frame.latitude),
 							minmea_tocoord(&frame.longitude),
 							minmea_tofloat(&frame.speed));
+
+					// store latitude and longitude
 					lat_ = minmea_tocoord(&frame.latitude);
 					lng_ = minmea_tocoord(&frame.longitude);
 				}
@@ -413,6 +420,7 @@ void client_controller::update_gps()
 	}
 }
 
+/// Translates sensor type to frame type
 static uint8_t sensor_type_to_frame_type(sensor_types type)
 {
 	switch (type)
@@ -428,6 +436,7 @@ static uint8_t sensor_type_to_frame_type(sensor_types type)
 
 void client_controller::report_error(int errorid)
 {
+	// build error message and send it to the server
 	message_builder builder;
 	builder.begin_message(packet_id::c2s_malfunction, packet_flags::reliable,
 						  bbid_, (uint32_t)time(NULL), position(lat_, lng_));
@@ -465,6 +474,7 @@ bool client_controller::send_frame(sensor *sensor, uint8_t frame_type, uint32_t 
 		int width = wc->get_width();
 		int height = wc->get_height();
 
+		// get frame buffer from camera sensor (thermal, rgb, grayscale)
 		uint8_t *bytes;
 		int64_t size = (int64_t)wc->get_frame_buffer((void**)&bytes);
 		if (size > 0) {
@@ -476,7 +486,7 @@ bool client_controller::send_frame(sensor *sensor, uint8_t frame_type, uint32_t 
 			builder.write_dword(height);
 			builder.write_dword(etime);
 			for (int64_t i = 0; i < size; ++i) {
-				builder.write_byte(bytes[i]);
+				builder.write_byte(bytes[i]); // image data
 			}
 
 			message msg;

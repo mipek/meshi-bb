@@ -12,6 +12,8 @@ const char *ErrorToString(Error error)
 			return "socket creation failed (debug)";
 		case kError_SocketConnect:
 			return "socket connect failed (debug)";
+		case kError_Webcam:
+			return "webcam error";
 	}
 	return "<unknown error>";
 }

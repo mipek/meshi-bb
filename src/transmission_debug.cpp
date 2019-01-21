@@ -96,6 +96,7 @@ size_t transmission_debug::send_message_internal(message const& msg, bool skip_f
 {
 	static const int MAX_PAYLOAD_SIZE = 1000;
 
+	// if the packet is fragmented we have to send it in multiple parts
 	if (!skip_fragment && msg.get_flags() & (uint8_t)packet_flags::fragmented) {
 		float lat = msg.get_latitude();
 		float lng = msg.get_longitude();
@@ -113,9 +114,11 @@ size_t transmission_debug::send_message_internal(message const& msg, bool skip_f
 								  (packet_flags)msg.get_flags(), msg.get_packet_number(),
 								  bbid_, (uint32_t) time(NULL), position(lat, lng));
 
+			// write sequence number/total count
 			builder.write_short(seq_num++);
 			builder.write_short(seq_total);
 
+			// write payload chunk
 			int chunk_size = min_value((int) total_size_left, MAX_PAYLOAD_SIZE);
 			for (int i = 0; i < chunk_size; ++i) {
 				builder.write_byte(*payload);
@@ -125,6 +128,8 @@ size_t transmission_debug::send_message_internal(message const& msg, bool skip_f
 
 			message msg;
 			builder.finalize_message(msg);
+
+			// recursively call this function to send the data but skip the "is fragmented"-check
 			bytes_send += send_message_internal(msg, true);
 		}
 		// TODO: send reliable message that tells the server we are done transmitting
@@ -313,11 +318,6 @@ Error transmission_debug::connect_to_master(const char *host, int port, uint16_t
 	if (!sockfd) {
 		return kError_SocketCreation;
 	}
-
-	// TCP: connect to server
-	//if (connect(sockfd, (const struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-	//	return kError_SocketConnect;
-	//}
 
 	*out = new transmission_debug(sockfd, server_addr, bbid);
 	return kError_None;
